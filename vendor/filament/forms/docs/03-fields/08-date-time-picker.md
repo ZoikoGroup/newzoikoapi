@@ -85,6 +85,17 @@ DatePicker::make('date_of_birth')
 
 <AutoScreenshot name="forms/fields/date-time-picker/display-format" alt="Date time picker with custom display format" version="3.x" />
 
+You may also configure the locale that is used when rendering the display, if you want to use different locale from your app config. For this, you can use the `locale()` method:
+
+```php
+use Filament\Forms\Components\DatePicker;
+
+DatePicker::make('date_of_birth')
+    ->native(false)
+    ->displayFormat('d F Y')
+    ->locale('fr')
+```
+
 ### Configuring the time input intervals
 
 You may customize the input interval for increasing/decreasing the hours/minutes /seconds using the `hoursStep()` , `minutesStep()` or `secondsStep()` methods:
@@ -174,6 +185,19 @@ TimePicker::make('appointment_at')
 
 Datalists provide autocomplete options to users when they use the picker. However, these are purely recommendations, and the user is still able to type any value into the input. If you're looking to strictly limit users to a set of predefined options, check out the [select field](select).
 
+### Focusing a default calendar date
+
+By default, if the field has no state, opening the calendar panel will open the calendar at the current date. This might not be convenient for situations where you want to open the calendar on a specific date instead. You can use the `defaultFocusedDate()` to set a default focused date on the calendar:
+
+```php
+use Filament\Forms\Components\DatePicker;
+
+DatePicker::make('custom_starts_at')
+    ->native(false)
+    ->placeholder(now()->startOfMonth())
+    ->defaultFocusedDate(now()->startOfMonth())
+```
+
 ## Adding affix text aside the field
 
 You may place text before and after the input using the `prefix()` and `suffix()` methods:
@@ -228,7 +252,7 @@ Please note that this setting is only enforced on native date pickers. If you're
 
 There are a few differences, compared to [`disabled()`](getting-started#disabling-a-field):
 
-- When using `readOnly()`, the field will still be sent to the server when the form is submitted. It can be mutated with the browser console, or via JavaScript. You can use [`dehydrated(false)`](advanced#preventing-a-field-from-being-dehydrated) to prevent this.
+- When using `readOnly()`, the field will still be sent to the server when the form is submitted. It can be mutated with the browser console, or via JavaScript. You can use [`dehydrated(false)`](../advanced#preventing-a-field-from-being-dehydrated) to prevent this.
 - There are no styling changes, such as less opacity, when using `readOnly()`.
 - The field is still focusable when using `readOnly()`.
 

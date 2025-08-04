@@ -82,6 +82,16 @@ TextColumn::make('created_at')
     ->since()
 ```
 
+Additionally, you can use the `dateTooltip()`, `dateTimeTooltip()` or `timeTooltip()` method to display a formatted date in a tooltip, often to provide extra information:
+
+```php
+use Filament\Tables\Columns\TextColumn;
+
+TextColumn::make('created_at')
+    ->since()
+    ->dateTimeTooltip()
+```
+
 ## Number formatting
 
 The `numeric()` method allows you to format an entry as a number:
@@ -111,12 +121,12 @@ TextColumn::make('stock')
     ->numeric(locale: 'nl')
 ```
 
-Alternatively, you can set the default locale used across your app using the `Number::useLocale()` method in the `boot()` method of a service provider:
+Alternatively, you can set the default locale used across your app using the `Table::$defaultNumberLocale` method in the `boot()` method of a service provider:
 
 ```php
-use Illuminate\Support\Number;
+use Filament\Tables\Table;
 
-Number::useLocale('nl');
+Table::$defaultNumberLocale = 'nl';
 ```
 
 ## Currency formatting
@@ -148,12 +158,12 @@ TextColumn::make('price')
     ->money('EUR', locale: 'nl')
 ```
 
-Alternatively, you can set the default locale used across your app using the `Number::useLocale()` method in the `boot()` method of a service provider:
+Alternatively, you can set the default locale used across your app using the `Table::$defaultNumberLocale` method in the `boot()` method of a service provider:
 
 ```php
-use Illuminate\Support\Number;
+use Filament\Tables\Table;
 
-Number::useLocale('nl');
+Table::$defaultNumberLocale = 'nl';
 ```
 
 ## Limiting text length
@@ -304,6 +314,29 @@ TextColumn::make('description')
     ->html()
 ```
 
+If you use this method, then the HTML will be sanitized to remove any potentially unsafe content before it is rendered. If you'd like to opt out of this behavior, you can wrap the HTML in an `HtmlString` object by formatting it:
+
+```php
+use Filament\Tables\Columns\TextColumn;
+use Illuminate\Support\HtmlString;
+
+TextColumn::make('description')
+    ->formatStateUsing(fn (string $state): HtmlString => new HtmlString($state))
+```
+
+Or, you can return a `view()` object from the `formatStateUsing()` method, which will also not be sanitized:
+
+```php
+use Filament\Tables\Columns\TextColumn;
+use Illuminate\Contracts\View\View;
+
+TextColumn::make('description')
+    ->formatStateUsing(fn (string $state): View => view(
+        'filament.tables.columns.description-entry-content',
+        ['state' => $state],
+    ))
+```
+
 ### Rendering Markdown as HTML
 
 If your column contains Markdown, you may render it using `markdown()`:
@@ -441,7 +474,7 @@ TextColumn::make('email')
 
 ### Customizing the text that is copied to the clipboard
 
-You can customize the text that gets copied to the clipboard using the `copyableState() method:
+You can customize the text that gets copied to the clipboard using the `copyableState()` method:
 
 ```php
 use Filament\Tables\Columns\TextColumn;

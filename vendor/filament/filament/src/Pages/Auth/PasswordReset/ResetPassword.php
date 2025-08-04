@@ -11,6 +11,7 @@ use Filament\Forms\Components\Component;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Http\Responses\Auth\Contracts\PasswordResetResponse;
+use Filament\Models\Contracts\FilamentUser;
 use Filament\Notifications\Notification;
 use Filament\Pages\Concerns\InteractsWithFormActions;
 use Filament\Pages\SimplePage;
@@ -66,17 +67,7 @@ class ResetPassword extends SimplePage
         try {
             $this->rateLimit(2);
         } catch (TooManyRequestsException $exception) {
-            Notification::make()
-                ->title(__('filament-panels::pages/auth/password-reset/reset-password.notifications.throttled.title', [
-                    'seconds' => $exception->secondsUntilAvailable,
-                    'minutes' => ceil($exception->secondsUntilAvailable / 60),
-                ]))
-                ->body(array_key_exists('body', __('filament-panels::pages/auth/password-reset/reset-password.notifications.throttled') ?: []) ? __('filament-panels::pages/auth/password-reset/reset-password.notifications.throttled.body', [
-                    'seconds' => $exception->secondsUntilAvailable,
-                    'minutes' => ceil($exception->secondsUntilAvailable / 60),
-                ]) : null)
-                ->danger()
-                ->send();
+            $this->getRateLimitedNotification($exception)?->send();
 
             return null;
         }
@@ -86,17 +77,32 @@ class ResetPassword extends SimplePage
         $data['email'] = $this->email;
         $data['token'] = $this->token;
 
+        $hasPanelAccess = true;
+
         $status = Password::broker(Filament::getAuthPasswordBroker())->reset(
-            $data,
-            function (CanResetPassword | Model | Authenticatable $user) use ($data) {
+            $this->getCredentialsFromFormData($data),
+            function (CanResetPassword | Model | Authenticatable $user) use ($data, &$hasPanelAccess) {
+                if (
+                    ($user instanceof FilamentUser) &&
+                    (! $user->canAccessPanel(Filament::getCurrentPanel()))
+                ) {
+                    $hasPanelAccess = false;
+
+                    return;
+                }
+
                 $user->forceFill([
                     'password' => Hash::make($data['password']),
                     'remember_token' => Str::random(60),
                 ])->save();
 
                 event(new PasswordReset($user));
-            },
+            }
         );
+
+        if ($hasPanelAccess === false) {
+            $status = Password::INVALID_USER;
+        }
 
         if ($status === Password::PASSWORD_RESET) {
             Notification::make()
@@ -113,6 +119,20 @@ class ResetPassword extends SimplePage
             ->send();
 
         return null;
+    }
+
+    protected function getRateLimitedNotification(TooManyRequestsException $exception): ?Notification
+    {
+        return Notification::make()
+            ->title(__('filament-panels::pages/auth/password-reset/reset-password.notifications.throttled.title', [
+                'seconds' => $exception->secondsUntilAvailable,
+                'minutes' => $exception->minutesUntilAvailable,
+            ]))
+            ->body(array_key_exists('body', __('filament-panels::pages/auth/password-reset/reset-password.notifications.throttled') ?: []) ? __('filament-panels::pages/auth/password-reset/reset-password.notifications.throttled.body', [
+                'seconds' => $exception->secondsUntilAvailable,
+                'minutes' => $exception->minutesUntilAvailable,
+            ]) : null)
+            ->danger();
     }
 
     public function form(Form $form): Form
@@ -185,5 +205,14 @@ class ResetPassword extends SimplePage
     protected function hasFullWidthFormActions(): bool
     {
         return true;
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    protected function getCredentialsFromFormData(array $data): array
+    {
+        return $data;
     }
 }

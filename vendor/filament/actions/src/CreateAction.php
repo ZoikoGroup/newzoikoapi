@@ -47,8 +47,6 @@ class CreateAction extends Action
 
         $this->record(null);
 
-        $this->databaseTransaction();
-
         $this->action(function (array $arguments, Form $form): void {
             $model = $this->getModel();
 
@@ -56,7 +54,7 @@ class CreateAction extends Action
                 if ($translatableContentDriver = $livewire->makeFilamentTranslatableContentDriver()) {
                     $record = $translatableContentDriver->makeRecord($model, $data);
                 } else {
-                    $record = new $model();
+                    $record = new $model;
                     $record->fill($data);
                 }
 

@@ -7,10 +7,18 @@ title: Export action
 Filament v3.2 introduced a prebuilt action that is able to export rows to a CSV or XLSX file. When the trigger button is clicked, a modal asks for the columns that they want to export, and what they should be labeled. This feature uses [job batches](https://laravel.com/docs/queues#job-batching) and [database notifications](../../notifications/database-notifications#overview), so you need to publish those migrations from Laravel. Also, you need to publish the migrations for tables that Filament uses to store information about exports:
 
 ```bash
+# Laravel 11 and higher
+php artisan make:queue-batches-table
+php artisan make:notifications-table
+
+# Laravel 10
 php artisan queue:batches-table
 php artisan notifications:table
-php artisan vendor:publish --tag=filament-actions-migrations
+```
 
+```bash
+# All apps
+php artisan vendor:publish --tag=filament-actions-migrations
 php artisan migrate
 ```
 
@@ -89,7 +97,7 @@ To define the columns that can be exported, you need to override the `getColumns
 ```php
 use Filament\Actions\Exports\ExportColumn;
 
-public function getColumns(): array
+public static function getColumns(): array
 {
     return [
         ExportColumn::make('name'),
@@ -337,11 +345,44 @@ ExportAction::make()
     ->modifyQueryUsing(fn (Builder $query) => $query->where('is_active', true))
 ```
 
+You may inject the `$options` argument into the function, which is an array of [options](#using-export-options) for that export:
+
+```php
+use App\Filament\Exports\ProductExporter;
+use Illuminate\Database\Eloquent\Builder;
+
+ExportAction::make()
+    ->exporter(ProductExporter::class)
+    ->modifyQueryUsing(fn (Builder $query, array $options) => $query->where('is_active', $options['isActive'] ?? true))
+```
+
+Alternatively, you can override the `modifyQuery()` method on the exporter class, which will modify the query for all actions that use that exporter:
+
+```php
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
+
+public static function modifyQuery(Builder $query): Builder
+{
+    return $query->with([
+        'purchasable' => fn (MorphTo $morphTo) => $morphTo->morphWith([
+            ProductPurchase::class => ['product'],
+            ServicePurchase::class => ['service'],
+            Subscription::class => ['plan'],
+        ]),
+    ]);
+}
+```
+
 ## Configuring the export filesystem
 
 ### Customizing the storage disk
 
-By default, exported files will be uploaded to the storage disk defined in the [configuration file](../installation#publishing-configuration). You can also set the `FILAMENT_FILESYSTEM_DISK` environment variable to change this.
+By default, exported files will be uploaded to the storage disk defined in the [configuration file](../installation#publishing-configuration), which is `public` by default. You can set the `FILAMENT_FILESYSTEM_DISK` environment variable to change this.
+
+While using the `public` disk a good default for many parts of Filament, using it for exports would result in exported files being stored in a public location. As such, if the default filesystem disk is `public` and a `local` disk exists in your `config/filesystems.php`, Filament will use the `local` disk for exports instead. If you override the disk to be `public` for an `ExportAction` or inside an exporter class, Filament will use that.
+
+In production, you should use a disk such as `s3` with a private access policy, to prevent unauthorized access to the exported files.
 
 If you want to use a different disk for a specific export, you can pass the disk name to the `disk()` method on the action:
 
@@ -349,6 +390,14 @@ If you want to use a different disk for a specific export, you can pass the disk
 ExportAction::make()
     ->exporter(ProductExporter::class)
     ->fileDisk('s3')
+```
+
+You may set the disk for all export actions at once in the `boot()` method of a service provider such as `AppServiceProvider`:
+
+```php
+use Filament\Actions\ExportAction;
+
+ExportAction::configureUsing(fn (ExportAction $action) => $action->fileDisk('s3'));
 ```
 
 Alternatively, you can override the `getFileDisk()` method on the exporter class, returning the name of the disk:
@@ -359,6 +408,8 @@ public function getFileDisk(): string
     return 's3';
 }
 ```
+
+Export files that are created are the developer's responsibility to delete if they wish. Filament does not delete these files in case the exports need to be downloaded again at a later date.
 
 ### Configuring the export file names
 
@@ -639,7 +690,7 @@ public function getJobBatchName(): ?string
 
 ## Authorization
 
-By default, only the user who started the export may download files that get generated. If you'd like to customize the authorization logic, you may create an `ExportPolicy` class, and [register it in your `AuthServiceProvider`](https://laravel.com/docs/10.x/authorization#registering-policies):
+By default, only the user who started the export may download files that get generated. If you'd like to customize the authorization logic, you may create an `ExportPolicy` class, and [register it in your `AuthServiceProvider`](https://laravel.com/docs/authorization#registering-policies):
 
 ```php
 use App\Policies\ExportPolicy;

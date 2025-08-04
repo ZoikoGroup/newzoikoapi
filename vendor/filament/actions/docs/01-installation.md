@@ -11,16 +11,14 @@ Filament requires the following to run:
 - PHP 8.1+
 - Laravel v10.0+
 - Livewire v3.0+
-
-> **Livewire v3 is recently released!**<br />
-> The Livewire team have done a great job in making it stable, but it was a complete rewrite of Livewire v2. You may encounter issues, so we recommend testing your application thoroughly before using Filament v3 in production.
+- Tailwind v3.0+ [(Using Tailwind v4?)](#installing-tailwind-css)
 
 ## Installation
 
 Require the Actions package using Composer:
 
 ```bash
-composer require filament/actions:"^3.2" -W
+composer require filament/actions:"^3.3" -W
 ```
 
 ## New Laravel projects
@@ -47,10 +45,12 @@ php artisan filament:install --actions
 
 ### Installing Tailwind CSS
 
+> Filament uses Tailwind CSS v3 for styling. If your project uses Tailwind CSS v4, you will unfortunately need to downgrade it to v3 to use Filament. Filament v3 can't support Tailwind CSS v4 since it introduces breaking changes. Filament v4 will support Tailwind CSS v4.
+
 Run the following command to install Tailwind CSS with the Tailwind Forms and Typography plugins:
 
 ```bash
-npm install tailwindcss @tailwindcss/forms @tailwindcss/typography postcss postcss-nesting autoprefixer --save-dev
+npm install tailwindcss@3 @tailwindcss/forms @tailwindcss/typography postcss postcss-nesting autoprefixer --save-dev
 ```
 
 Create a new `tailwind.config.js` file and add the Filament `preset` *(includes the Filament color scheme and the required Tailwind plugins)*:
@@ -76,6 +76,7 @@ Add Tailwind's CSS layers to your `resources/css/app.css`:
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+@tailwind variants;
 ```
 
 Create a `postcss.config.js` file in the root of your project and register Tailwind CSS, PostCSS Nesting and Autoprefixer as plugins:

@@ -6,7 +6,7 @@ title: Contributing
 
 ## Reporting bugs
 
-If you find a bug in Filament, please report it by opening an issue on our [GitHub repository](https://github.com/filamentphp/filament/issues/new/choose). Before opening an issue, please search the [existing issues](https://github.com/filamentphp/filament/issues?q=is%3Aissue) to see if the bug has already been reported. 
+If you find a bug in Filament, please report it by opening an issue on our [GitHub repository](https://github.com/filamentphp/filament/issues/new/choose). Before opening an issue, please search the [existing issues](https://github.com/filamentphp/filament/issues?q=is%3Aissue) to see if the bug has already been reported.
 
 Please make sure to include as much information as possible, including the version of packages in your app. You can use this Artisan command in your app to open a new issue with all the correct versions pre-filled:
 
@@ -14,13 +14,13 @@ Please make sure to include as much information as possible, including the versi
 php artisan make:filament-issue
 ```
 
-When creating an issue, we require a "reproduction repository". **Please do not link to your actual project**, what we need instead is a _minimal_ reproduction in a fresh project without any unnecessary code. This means it doesn't matter if your real project is private / confidential, since we want a link to a separate, isolated reproduction. This allows us to fix the problem much quicker. **Issues will be automatically closed and not reviewed if this is missing, to preserve maintainer time and to ensure the process is fair for those who put effort into reporting.** If you believe a reproduction repository is not suitable for the issue, which is a very rare case, please `@danharrin` and explain why. Saying that "it's just a simple issue" is not an excuse for not creating a repository! [Need a headstart? We have a template Filament project for you.](https://filament-issue.unitedbycode.com)
+When creating an issue, we require a "reproduction repository". **Please do not link to your actual project**, what we need instead is a _minimal_ reproduction in a fresh project without any unnecessary code. This means it doesn't matter if your real project is private / confidential, since we want a link to a separate, isolated reproduction. This allows us to fix the problem much quicker. **Issues will be automatically closed and not reviewed if this is missing, to preserve maintainer time and to ensure the process is fair for those who put effort into reporting.** If you believe a reproduction repository is not suitable for the issue, which is a very rare case, please `@danharrin` and explain why. Saying that "it's just a simple issue" is not an excuse for not creating a repository! [Need a headstart? We have a template Filament project for you.](https://unitedbycode.com/filament-issue)
 
 Remember, bug reports are created in the hope that others with the same problem will be able to collaborate with you on solving it. Do not expect that the bug report will automatically see any activity or that others will jump to fix it. Creating a bug report serves to help yourself and others start on the path of fixing the problem.
 
 ## Development of new features
 
-If you would like to propose a new feature or improvement to Filament, you may use our [discussion form](https://github.com/filamentphp/filament/discussions) hosted on Github. If you are intending on implementing the feature yourself in a pull request, we advise you to `@danharrin` in your feature discussion beforehand and ask if it is suitable for the framework to prevent wasting your time.
+If you would like to propose a new feature or improvement to Filament, you may use our [discussion form](https://github.com/filamentphp/filament/discussions) hosted on GitHub. If you are intending on implementing the feature yourself in a pull request, we advise you to `@danharrin` in your feature discussion beforehand and ask if it is suitable for the framework to prevent wasting your time.
 
 ## Development of plugins
 

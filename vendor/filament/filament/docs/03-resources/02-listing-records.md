@@ -47,7 +47,7 @@ public function getTabs(): array
 You can add icons to the tabs by passing an [icon](https://blade-ui-kit.com/blade-icons?set=1#search) into the `icon()` method of the tab:
 
 ```php
-use Filament\Resources\Components\Tab;
+use use Filament\Resources\Components\Tab;
 
 Tab::make()
     ->icon('heroicon-m-user-group')
@@ -84,6 +84,17 @@ use Filament\Resources\Components\Tab;
 Tab::make()
     ->badge(Customer::query()->where('active', true)->count())
     ->badgeColor('success')
+```
+
+### Adding extra attributes to filter tabs
+
+You may also pass extra HTML attributes to filter tabs using `extraAttributes()`:
+
+```php
+use Filament\Resources\Components\Tab;
+
+Tab::make()
+    ->extraAttributes(['data-cy' => 'statement-confirmed-tab'])
 ```
 
 ### Customizing the default tab

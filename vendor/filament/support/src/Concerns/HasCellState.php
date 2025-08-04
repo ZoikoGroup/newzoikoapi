@@ -8,9 +8,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\Relation;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Stringable;
+use Znck\Eloquent\Relations\BelongsToThrough;
 
 trait HasCellState
 {
@@ -71,10 +71,6 @@ trait HasCellState
 
     public function getState(): mixed
     {
-        if (! $this->getRecord()) {
-            return null;
-        }
-
         $state = ($this->getStateUsing !== null) ?
             $this->evaluate($this->getStateUsing) :
             $this->getStateFromRecord();
@@ -97,7 +93,7 @@ trait HasCellState
     {
         $record = $this->getRecord();
 
-        $state = Arr::get($record, $this->getName());
+        $state = data_get($record, $this->getName());
 
         if ($state !== null) {
             return $state;
@@ -257,7 +253,7 @@ trait HasCellState
                 ->when(
                     ($relationship instanceof BelongsTo ||
                         $relationship instanceof BelongsToMany ||
-                        $relationship instanceof \Znck\Eloquent\Relations\BelongsToThrough),
+                        $relationship instanceof BelongsToThrough),
                     fn (Stringable $name) => $name->plural(),
                 )
                 ->camel();

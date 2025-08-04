@@ -25,6 +25,7 @@ use Filament\Forms\Components\TextInput;
 TextInput::make('text')
     ->email() // or
     ->numeric() // or
+    ->integer() // or
     ->password() // or
     ->tel() // or
     ->url()
@@ -41,7 +42,7 @@ TextInput::make('backgroundColor')
 
 ## Setting the HTML input mode
 
-You may set the [`inputmode` attribute](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input#attributes) of the input using the `inputMode()` method:
+You may set the [`inputmode` attribute](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input#inputmode) of the input using the `inputMode()` method:
 
 ```php
 use Filament\Forms\Components\TextInput;
@@ -94,7 +95,7 @@ You may specify [datalist](https://developer.mozilla.org/en-US/docs/Web/HTML/Ele
 ```php
 TextInput::make('manufacturer')
     ->datalist([
-        'BWM',
+        'BMW',
         'Ford',
         'Mercedes-Benz',
         'Porsche',
@@ -212,18 +213,18 @@ TextInput::make('amount')
 
 ## Making the field read-only
 
-Not to be confused with [disabling the field](getting-started#disabling-a-field), you may make the field "read-only" using the `readonly()` method:
+Not to be confused with [disabling the field](getting-started#disabling-a-field), you may make the field "read-only" using the `readOnly()` method:
 
 ```php
 use Filament\Forms\Components\TextInput;
 
 TextInput::make('name')
-    ->readonly()
+    ->readOnly()
 ```
 
 There are a few differences, compared to [`disabled()`](getting-started#disabling-a-field):
 
-- When using `readOnly()`, the field will still be sent to the server when the form is submitted. It can be mutated with the browser console, or via JavaScript. You can use [`dehydrated(false)`](advanced#preventing-a-field-from-being-dehydrated) to prevent this.
+- When using `readOnly()`, the field will still be sent to the server when the form is submitted. It can be mutated with the browser console, or via JavaScript. You can use [`dehydrated(false)`](../advanced#preventing-a-field-from-being-dehydrated) to prevent this.
 - There are no styling changes, such as less opacity, when using `readOnly()`.
 - The field is still focusable when using `readOnly()`.
 

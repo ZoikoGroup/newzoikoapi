@@ -10,6 +10,10 @@ return [
 
     'columns' => [
 
+        'actions' => [
+            'label' => 'Aktion|Aktionen',
+        ],
+
         'text' => [
 
             'actions' => [
@@ -102,7 +106,7 @@ return [
 
     'empty' => [
 
-        'heading' => 'Keine Datensätze gefunden',
+        'heading' => 'Keine :model',
 
         'description' => 'Erstelle ein(e) :model um zu beginnen.',
 

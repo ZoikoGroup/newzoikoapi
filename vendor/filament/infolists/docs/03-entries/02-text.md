@@ -56,6 +56,16 @@ TextEntry::make('created_at')
     ->since()
 ```
 
+Additionally, you can use the `dateTooltip()`, `dateTimeTooltip()` or `timeTooltip()` method to display a formatted date in a tooltip, often to provide extra information:
+
+```php
+use Filament\Infolists\Components\TextEntry;
+
+TextEntry::make('created_at')
+    ->since()
+    ->dateTimeTooltip()
+```
+
 ## Number formatting
 
 The `numeric()` method allows you to format an entry as a number:
@@ -85,12 +95,12 @@ TextEntry::make('stock')
     ->numeric(locale: 'nl')
 ```
 
-Alternatively, you can set the default locale used across your app using the `Number::useLocale()` method in the `boot()` method of a service provider:
+Alternatively, you can set the default locale used across your app using the `Infolist::$defaultNumberLocale` method in the `boot()` method of a service provider:
 
 ```php
-use Illuminate\Support\Number;
+use Filament\Infolists\Infolist;
 
-Number::useLocale('nl');
+Infolist::$defaultNumberLocale = 'nl';
 ```
 
 ## Currency formatting
@@ -119,15 +129,15 @@ By default, your app's locale will be used to format the money suitably. If you 
 use Filament\Infolists\Components\TextEntry;
 
 TextEntry::make('price')
-    ->money(currency: 'EUR', locale: 'nl')
+    ->money('EUR', locale: 'nl')
 ```
 
-Alternatively, you can set the default locale used across your app using the `Number::useLocale()` method in the `boot()` method of a service provider:
+Alternatively, you can set the default locale used across your app using the `Infolist::$defaultNumberLocale` method in the `boot()` method of a service provider:
 
 ```php
-use Illuminate\Support\Number;
+use Filament\Infolists\Infolist;
 
-Number::useLocale('nl');
+Infolist::$defaultNumberLocale = 'nl';
 ```
 
 ## Limiting text length
@@ -257,6 +267,29 @@ use Filament\Infolists\Components\TextEntry;
 
 TextEntry::make('description')
     ->html()
+```
+
+If you use this method, then the HTML will be sanitized to remove any potentially unsafe content before it is rendered. If you'd like to opt out of this behavior, you can wrap the HTML in an `HtmlString` object by formatting it:
+
+```php
+use Filament\Infolists\Components\TextEntry;
+use Illuminate\Support\HtmlString;
+
+TextEntry::make('description')
+    ->formatStateUsing(fn (string $state): HtmlString => new HtmlString($state))
+```
+
+Or, you can return a `view()` object from the `formatStateUsing()` method, which will also not be sanitized:
+
+```php
+use Filament\Infolists\Components\TextEntry;
+use Illuminate\Contracts\View\View;
+
+TextEntry::make('description')
+    ->formatStateUsing(fn (string $state): View => view(
+        'filament.infolists.components.description-entry-content',
+        ['state' => $state],
+    ))
 ```
 
 ### Rendering Markdown as HTML

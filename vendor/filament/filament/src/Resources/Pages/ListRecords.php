@@ -3,6 +3,7 @@
 namespace Filament\Resources\Pages;
 
 use Filament\Actions\Action;
+use Filament\Actions\Contracts\HasRecord;
 use Filament\Actions\CreateAction;
 use Filament\Facades\Filament;
 use Filament\Forms\Form;
@@ -68,9 +69,7 @@ class ListRecords extends Page implements Tables\Contracts\HasTable
         $this->loadDefaultActiveTab();
     }
 
-    protected function authorizeAccess(): void
-    {
-    }
+    protected function authorizeAccess(): void {}
 
     public function getBreadcrumb(): ?string
     {
@@ -255,6 +254,10 @@ class ListRecords extends Page implements Tables\Contracts\HasTable
 
                     $action->record($record);
 
+                    if (($actionGroup = $action->getGroup()) instanceof HasRecord) {
+                        $actionGroup->record($record);
+                    }
+
                     if ($action->isHidden()) {
                         continue;
                     }
@@ -278,6 +281,10 @@ class ListRecords extends Page implements Tables\Contracts\HasTable
                     }
 
                     $action->record($record);
+
+                    if (($actionGroup = $action->getGroup()) instanceof HasRecord) {
+                        $actionGroup->record($record);
+                    }
 
                     if ($action->isHidden()) {
                         continue;

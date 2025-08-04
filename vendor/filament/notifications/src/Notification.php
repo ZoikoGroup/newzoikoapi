@@ -57,14 +57,6 @@ class Notification extends ViewComponent implements Arrayable
         return $static;
     }
 
-    /**
-     * @return array<string, mixed>
-     */
-    public function getViewData(): array
-    {
-        return $this->viewData;
-    }
-
     public function toArray(): array
     {
         return [
@@ -236,7 +228,7 @@ class Notification extends ViewComponent implements Arrayable
 
     public static function assertNotified(Notification | string | null $notification = null): void
     {
-        $notificationsLivewireComponent = new Notifications();
+        $notificationsLivewireComponent = new Notifications;
         $notificationsLivewireComponent->mount();
         $notifications = $notificationsLivewireComponent->notifications;
 
@@ -272,7 +264,7 @@ class Notification extends ViewComponent implements Arrayable
 
     public static function assertNotNotified(Notification | string | null $notification = null): void
     {
-        $notificationsLivewireComponent = new Notifications();
+        $notificationsLivewireComponent = new Notifications;
         $notificationsLivewireComponent->mount();
         $notifications = $notificationsLivewireComponent->notifications;
 
@@ -296,7 +288,7 @@ class Notification extends ViewComponent implements Arrayable
             Assert::assertNotSame(
                 collect($expectedNotification)->except(['id'])->toArray(),
                 collect($notification->toArray())->except(['id'])->toArray(),
-                'The notification with the given configration was sent'
+                'The notification with the given configuration was sent'
             );
 
             return;

@@ -8,10 +8,12 @@ use Filament\Support\Commands\Concerns\CanIndentStrings;
 use Filament\Support\Commands\Concerns\CanManipulateFiles;
 use Illuminate\Console\Command;
 use Illuminate\Support\Arr;
+use Symfony\Component\Console\Attribute\AsCommand;
 
 use function Laravel\Prompts\select;
 use function Laravel\Prompts\text;
 
+#[AsCommand(name: 'make:filament-cluster')]
 class MakeClusterCommand extends Command
 {
     use CanIndentStrings;
@@ -43,7 +45,7 @@ class MakeClusterCommand extends Command
         $panel = $this->option('panel');
 
         if ($panel) {
-            $panel = Filament::getPanel($panel);
+            $panel = Filament::getPanel($panel, isStrict: false);
         }
 
         if (! $panel) {
@@ -62,6 +64,13 @@ class MakeClusterCommand extends Command
 
         $clusterDirectories = $panel->getClusterDirectories();
         $clusterNamespaces = $panel->getClusterNamespaces();
+
+        foreach ($clusterDirectories as $clusterIndex => $clusterDirectory) {
+            if (str($clusterDirectory)->startsWith(base_path('vendor'))) {
+                unset($clusterDirectories[$clusterIndex]);
+                unset($clusterNamespaces[$clusterIndex]);
+            }
+        }
 
         $namespace = (count($clusterNamespaces) > 1) ?
             select(
