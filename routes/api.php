@@ -177,7 +177,7 @@ Route::group(['namespace' => 'api', 'prefix' => 'v1'], function () {
     // Order items
     Route::post('order/item/create', [OrderItemController::class, 'store'])->middleware('auth:api');
 
-    // Email Templates
+    // Email Templates??
     Route::post('email-template/create', [EmailTemplateController::class, 'store'])->middleware('auth:api');
     Route::post('email-template/update/{id}', [EmailTemplateController::class, 'update'])->middleware('auth:api');
     Route::get('email-templates', [EmailTemplateController::class, 'index'])->middleware('auth:api');
