@@ -164,7 +164,7 @@ unset($__defined_vars); ?>
     $hasTooltip = filled($tooltip);
 ?>
 
-<?php if($tag === 'button'): ?>
+<!--[if BLOCK]><![endif]--><?php if($tag === 'button'): ?>
     <button
         <?php if($keyBindings || $hasTooltip): ?>
             x-data="{}"
@@ -191,12 +191,12 @@ unset($__defined_vars); ?>
                 ->style([$buttonStyles])); ?>
 
     >
-        <?php if($label): ?>
+        <!--[if BLOCK]><![endif]--><?php if($label): ?>
             <span class="sr-only">
                 <?php echo e($label); ?>
 
             </span>
-        <?php endif; ?>
+        <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
 
         <?php if (isset($component)) { $__componentOriginalbfc641e0710ce04e5fe02876ffc6f950 = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginalbfc641e0710ce04e5fe02876ffc6f950 = $attributes; } ?>
@@ -237,7 +237,7 @@ unset($__defined_vars); ?>
 <?php unset($__componentOriginalbfc641e0710ce04e5fe02876ffc6f950); ?>
 <?php endif; ?>
 
-        <?php if($hasLoadingIndicator): ?>
+        <!--[if BLOCK]><![endif]--><?php if($hasLoadingIndicator): ?>
             <?php if (isset($component)) { $__componentOriginalbef7c2371a870b1887ec3741fe311a10 = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginalbef7c2371a870b1887ec3741fe311a10 = $attributes; } ?>
 <?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'filament::components.loading-indicator','data' => ['attributes' => 
@@ -272,9 +272,9 @@ unset($__defined_vars); ?>
 <?php $component = $__componentOriginalbef7c2371a870b1887ec3741fe311a10; ?>
 <?php unset($__componentOriginalbef7c2371a870b1887ec3741fe311a10); ?>
 <?php endif; ?>
-        <?php endif; ?>
+        <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
 
-        <?php if(filled($badge)): ?>
+        <!--[if BLOCK]><![endif]--><?php if(filled($badge)): ?>
             <div class="<?php echo e($badgeContainerClasses); ?>">
                 <?php if (isset($component)) { $__componentOriginal986dce9114ddce94a270ab00ce6c273d = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginal986dce9114ddce94a270ab00ce6c273d = $attributes; } ?>
@@ -299,7 +299,7 @@ unset($__defined_vars); ?>
 <?php unset($__componentOriginal986dce9114ddce94a270ab00ce6c273d); ?>
 <?php endif; ?>
             </div>
-        <?php endif; ?>
+        <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
     </button>
 <?php elseif($tag === 'a'): ?>
     <a
@@ -326,12 +326,12 @@ unset($__defined_vars); ?>
                 ->style([$buttonStyles])); ?>
 
     >
-        <?php if($label): ?>
+        <!--[if BLOCK]><![endif]--><?php if($label): ?>
             <span class="sr-only">
                 <?php echo e($label); ?>
 
             </span>
-        <?php endif; ?>
+        <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
 
         <?php if (isset($component)) { $__componentOriginalbfc641e0710ce04e5fe02876ffc6f950 = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginalbfc641e0710ce04e5fe02876ffc6f950 = $attributes; } ?>
@@ -354,7 +354,7 @@ unset($__defined_vars); ?>
 <?php unset($__componentOriginalbfc641e0710ce04e5fe02876ffc6f950); ?>
 <?php endif; ?>
 
-        <?php if(filled($badge)): ?>
+        <!--[if BLOCK]><![endif]--><?php if(filled($badge)): ?>
             <div class="<?php echo e($badgeContainerClasses); ?>">
                 <?php if (isset($component)) { $__componentOriginal986dce9114ddce94a270ab00ce6c273d = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginal986dce9114ddce94a270ab00ce6c273d = $attributes; } ?>
@@ -379,7 +379,7 @@ unset($__defined_vars); ?>
 <?php unset($__componentOriginal986dce9114ddce94a270ab00ce6c273d); ?>
 <?php endif; ?>
             </div>
-        <?php endif; ?>
+        <?php endif; ?><!--[if ENDBLOCK]><![endif]-->
     </a>
-<?php endif; ?>
+<?php endif; ?><!--[if ENDBLOCK]><![endif]-->
 <?php /**PATH C:\xampp\htdocs\zoikotelecom_backend_filament_admin\vendor\filament\support\src\/../resources/views/components/icon-button.blade.php ENDPATH**/ ?>
