@@ -165,6 +165,7 @@ return array(
     'App\\Models\\Page' => $baseDir . '/app/Models/Page.php',
     'App\\Models\\Permission' => $baseDir . '/app/Models/Permission.php',
     'App\\Models\\PersonalAccessToken' => $baseDir . '/app/Models/PersonalAccessToken.php',
+    'App\\Models\\Plan' => $baseDir . '/app/Models/Plan.php',
     'App\\Models\\Product' => $baseDir . '/app/Models/Product.php',
     'App\\Models\\ProductAttribute' => $baseDir . '/app/Models/ProductAttribute.php',
     'App\\Models\\ProductCategory' => $baseDir . '/app/Models/ProductCategory.php',
