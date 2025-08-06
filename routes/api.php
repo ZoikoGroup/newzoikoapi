@@ -24,7 +24,7 @@ use App\Http\Controllers\Api\CurrencyController;
 use App\Http\Controllers\Api\FaqController;
 use App\Http\Controllers\Api\MenuController;
 use App\Http\Controllers\Api\MenuItemController;
-use App\Http\Controllers\ApiController;
+use App\Http\Controllers\PlansController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -185,6 +185,12 @@ Route::group(['namespace' => 'api', 'prefix' => 'v1'], function () {
     Route::get('email-templates', [EmailTemplateController::class, 'index'])->middleware('auth:api');
     Route::get('email-template/{id}', [EmailTemplateController::class, 'show'])->middleware('auth:api');
     Route::delete('email-template/delete/{id}', [EmailTemplateController::class, 'destroy'])->middleware('auth:api');
+
+    //Plans
+    Route::post('plans', [\App\Http\Controllers\PlansController::class, 'plans']);
+    Route::post('plans/prepaid', [\App\Http\Controllers\PlansController::class, 'plan_prepaid']);
+    Route::post('plans/postpaid', [\App\Http\Controllers\PlansController::class, 'plan_postpaid']);
+    Route::post('plan/{id}', [\App\Http\Controllers\PlansController::class, 'plan_by_id']);  
 });
 
 
