@@ -92,41 +92,65 @@ trait CanSortRecords
 
         $column->applySort($query, $sortDirection);
 
+        $this->applyDefaultKeySortToTableQuery($query);
+
         return $query;
     }
 
     protected function applyDefaultSortingToTableQuery(Builder $query): Builder
     {
-        $sortColumnName = $this->getTable()->getDefaultSortColumn();
         $sortDirection = ($this->getTable()->getDefaultSortDirection() ?? $this->tableSortDirection) === 'desc' ? 'desc' : 'asc';
+        $defaultSort = $this->getTable()->getDefaultSort($query, $sortDirection);
 
         if (
-            $sortColumnName &&
-            ($sortColumn = $this->getTable()->getSortableVisibleColumn($sortColumnName))
+            is_string($defaultSort) &&
+            ($sortColumn = $this->getTable()->getSortableVisibleColumn($defaultSort))
         ) {
             $sortColumn->applySort($query, $sortDirection);
-
-            return $query;
+        } elseif (is_string($defaultSort)) {
+            $query->orderBy($defaultSort, $sortDirection);
         }
 
-        if ($sortColumnName) {
-            return $query->orderBy($sortColumnName, $sortDirection);
-        }
-
-        if ($sortQueryUsing = $this->getTable()->getDefaultSortQuery()) {
-            app()->call($sortQueryUsing, [
-                'direction' => $sortDirection,
-                'query' => $query,
-            ]);
-
-            return $query;
+        if ($defaultSort instanceof Builder) {
+            $query = $defaultSort;
         }
 
         if (filled($query->toBase()->orders)) {
+            $this->applyDefaultKeySortToTableQuery($query);
+
             return $query;
         }
 
         return $query->orderBy($query->getModel()->getQualifiedKeyName());
+    }
+
+    protected function applyDefaultKeySortToTableQuery(Builder $query): Builder
+    {
+        if (! $this->getTable()->hasDefaultKeySort()) {
+            return $query;
+        }
+
+        $qualifiedKeyName = $query->getModel()->getQualifiedKeyName();
+
+        foreach ($query->toBase()->orders ?? [] as $order) { /** @phpstan-ignore nullCoalesce.property */
+            if (($order['column'] ?? null) === $qualifiedKeyName) {
+                return $query;
+            }
+
+            if (
+                is_string($order['column'] ?? null) &&
+                str($order['column'] ?? null)->contains('.') &&
+                str($order['column'] ?? null)->afterLast('.')->is(
+                    str($qualifiedKeyName)->afterLast('.')
+                )
+            ) {
+                return $query;
+            }
+        }
+
+        $query->orderBy($qualifiedKeyName);
+
+        return $query;
     }
 
     /**
@@ -147,7 +171,7 @@ trait CanSortRecords
 
     public function getTableSortSessionKey(): string
     {
-        $table = class_basename($this::class);
+        $table = md5($this::class);
 
         return "tables.{$table}_sort";
     }

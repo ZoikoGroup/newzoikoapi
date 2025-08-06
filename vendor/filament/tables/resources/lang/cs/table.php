@@ -10,6 +10,10 @@ return [
 
     'columns' => [
 
+        'actions' => [
+            'label' => 'Akce|Akce',
+        ],
+
         'text' => [
 
             'actions' => [
@@ -111,6 +115,10 @@ return [
     'filters' => [
 
         'actions' => [
+
+            'apply' => [
+                'label' => 'Použít filtry',
+            ],
 
             'remove' => [
                 'label' => 'Odstranit filtr',

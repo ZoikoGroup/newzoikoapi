@@ -4,6 +4,9 @@ namespace Filament\Actions\Imports\Jobs;
 
 use Carbon\CarbonInterface;
 use Exception;
+use Filament\Actions\Imports\Events\ImportChunkProcessed;
+use Filament\Actions\Imports\Exceptions\RowImportFailedException;
+use Filament\Actions\Imports\ImportColumn;
 use Filament\Actions\Imports\Importer;
 use Filament\Actions\Imports\Models\FailedImportRow;
 use Filament\Actions\Imports\Models\Import;
@@ -61,7 +64,11 @@ class ImportCsv implements ShouldQueue
         /** @var Authenticatable $user */
         $user = $this->import->user;
 
-        auth()->login($user);
+        if (method_exists(auth()->guard(), 'login')) {
+            auth()->login($user);
+        } else {
+            auth()->setUser($user);
+        }
 
         $exceptions = [];
 
@@ -78,6 +85,8 @@ class ImportCsv implements ShouldQueue
             try {
                 DB::transaction(fn () => ($this->importer)($row));
                 $successfulRows++;
+            } catch (RowImportFailedException $exception) {
+                $this->logFailedRow($row, $exception->getMessage());
             } catch (ValidationException $exception) {
                 $this->logFailedRow($row, collect($exception->errors())->flatten()->implode(' '));
             } catch (Throwable $exception) {
@@ -89,19 +98,37 @@ class ImportCsv implements ShouldQueue
             $processedRows++;
         }
 
+        $this->import::query()
+            ->whereKey($this->import)
+            ->update([
+                'processed_rows' => DB::raw('processed_rows + ' . $processedRows),
+                'successful_rows' => DB::raw('successful_rows + ' . $successfulRows),
+            ]);
+
+        $this->import::query()
+            ->whereKey($this->import)
+            ->whereColumn('processed_rows', '>', 'total_rows')
+            ->update([
+                'processed_rows' => DB::raw('total_rows'),
+            ]);
+
+        $this->import::query()
+            ->whereKey($this->import)
+            ->whereColumn('successful_rows', '>', 'total_rows')
+            ->update([
+                'successful_rows' => DB::raw('total_rows'),
+            ]);
+
         $this->import->refresh();
 
-        $importProcessedRows = $this->import->processed_rows + $processedRows;
-        $this->import->processed_rows = ($importProcessedRows < $this->import->total_rows) ?
-            $importProcessedRows :
-            $this->import->total_rows;
-
-        $importSuccessfulRows = $this->import->successful_rows + $successfulRows;
-        $this->import->successful_rows = ($importSuccessfulRows < $this->import->total_rows) ?
-            $importSuccessfulRows :
-            $this->import->total_rows;
-
-        $this->import->save();
+        event(new ImportChunkProcessed(
+            $this->import,
+            $this->columnMap,
+            $this->options,
+            $processedRows,
+            $successfulRows,
+            $exceptions,
+        ));
 
         $this->handleExceptions($exceptions);
     }
@@ -126,9 +153,40 @@ class ImportCsv implements ShouldQueue
     {
         $failedRow = app(FailedImportRow::class);
         $failedRow->import()->associate($this->import);
-        $failedRow->data = $data;
+        $failedRow->data = $this->filterSensitiveData($data);
         $failedRow->validation_error = $validationError;
         $failedRow->save();
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    protected function filterSensitiveData(array $data): array
+    {
+        return array_reduce(
+            $this->importer->getColumns(),
+            function (array $carry, ImportColumn $column): array {
+                if (! $column->isSensitive()) {
+                    return $carry;
+                }
+
+                $csvHeader = $this->columnMap[$column->getName()] ?? null;
+
+                if (blank($csvHeader)) {
+                    return $carry;
+                }
+
+                if (! array_key_exists($csvHeader, $carry)) {
+                    return $carry;
+                }
+
+                unset($carry[$csvHeader]);
+
+                return $carry;
+            },
+            initial: $data,
+        );
     }
 
     protected function utf8Encode(mixed $value): mixed

@@ -6,12 +6,14 @@ use Filament\Support\Commands\Concerns\CanManipulateFiles;
 use Filament\Support\Facades\FilamentAsset;
 use Illuminate\Console\Command;
 use Illuminate\Filesystem\Filesystem;
+use Symfony\Component\Console\Attribute\AsCommand;
 
+#[AsCommand(name: 'filament:assets')]
 class AssetsCommand extends Command
 {
     use CanManipulateFiles;
 
-    protected $description = 'Set up Filament assets.';
+    protected $description = 'Set up Filament assets';
 
     protected $signature = 'filament:assets';
 

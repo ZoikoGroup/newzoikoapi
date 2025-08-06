@@ -25,7 +25,7 @@
             const url = new URL(window.location.href)
             url.searchParams.set(@js($getTabQueryStringKey()), this.tab)
 
-            history.pushState(null, document.title, url.toString())
+            history.replaceState(null, document.title, url.toString())
         },
     }"
     x-init="
@@ -88,6 +88,8 @@
                 :alpine-active="'tab === \'' . $tabId . '\''"
                 :badge="$tab->getBadge()"
                 :badge-color="$tab->getBadgeColor()"
+                :badge-icon="$tab->getBadgeIcon()"
+                :badge-icon-position="$tab->getBadgeIconPosition()"
                 :icon="$tab->getIcon()"
                 :icon-position="$tab->getIconPosition()"
                 :x-on:click="'tab = \'' . $tabId . '\''"

@@ -5,16 +5,14 @@ namespace Filament\Support\Services;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Database\Query\Expression;
 use Illuminate\Database\Query\JoinClause;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Kirschbaum\PowerJoins\JoinsHelper;
-use Kirschbaum\PowerJoins\PowerJoins;
 
 class RelationshipJoiner
 {
-    use PowerJoins;
-
     public function leftJoinRelationship(Builder $query, string $relationship): Builder
     {
         if (str($relationship)->contains('.')) {
@@ -91,6 +89,36 @@ class RelationshipJoiner
             $relationshipQuery
                 ->distinct()
                 ->select($relationshipQuery->getModel()->getTable() . '.*');
+
+            /** @phpstan-ignore-next-line */
+            foreach (($relationshipQuery->getQuery()->orders ?? []) as $order) {
+                // Regular orders: { column: string, direction: 'asc' | 'desc' }
+                // Sub-query orders: { column: Illuminate\Database\Query\Expression, direction: 'asc' | 'desc' }
+                // Raw orders: { type: 'Raw', sql: string }
+                if (! array_key_exists('column', $order) && ! array_key_exists('sql', $order)) {
+                    continue;
+                }
+
+                $columnValue = $order['column'] ?? new Expression($order['sql']);
+
+                if (
+                    $columnValue instanceof Expression
+                    && str($columnValue->getValue($relationship->getGrammar()))->contains('?')
+                ) {
+                    // Heuristic to determine if the expression contains (a) binding(s), if so, as of
+                    // yet we cannot reliably determine (which) bindings are used in the expression.
+                    continue;
+                }
+
+                if (
+                    str($columnValue instanceof Expression ? $columnValue->getValue($relationship->getGrammar()) : $columnValue)
+                        ->startsWith("{$relationshipQuery->getModel()->getTable()}.")
+                ) {
+                    continue;
+                }
+
+                $relationshipQuery->addSelect($columnValue);
+            }
         }
 
         return $relationshipQuery;

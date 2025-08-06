@@ -9,6 +9,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\HtmlString;
 use Illuminate\Support\Number;
 use Illuminate\Support\Str;
 
@@ -51,7 +52,7 @@ trait CanFormatState
         return $this;
     }
 
-    public function date(?string $format = null, ?string $timezone = null): static
+    public function date(string | Closure | null $format = null, ?string $timezone = null): static
     {
         $this->isDate = true;
 
@@ -64,13 +65,13 @@ trait CanFormatState
 
             return Carbon::parse($state)
                 ->setTimezone($timezone ?? $column->getTimezone())
-                ->translatedFormat($format);
+                ->translatedFormat($column->evaluate($format));
         });
 
         return $this;
     }
 
-    public function dateTime(?string $format = null, ?string $timezone = null): static
+    public function dateTime(string | Closure | null $format = null, ?string $timezone = null): static
     {
         $this->isDateTime = true;
 
@@ -85,7 +86,57 @@ trait CanFormatState
     {
         $this->isDateTime = true;
 
-        $this->formatStateUsing(static function (TextColumn $column, $state) use ($timezone): ?string {
+        $this->formatStateUsing(static function (TextColumn $column, mixed $state) use ($timezone): ?string {
+            if (blank($state)) {
+                return null;
+            }
+
+            return Carbon::parse($state)
+                ->setTimezone($timezone ?? $column->getTimezone())
+                ->diffForHumans();
+        });
+
+        return $this;
+    }
+
+    public function dateTooltip(string | Closure | null $format = null, ?string $timezone = null): static
+    {
+        $format ??= Table::$defaultDateDisplayFormat;
+
+        $this->tooltip(static function (TextColumn $column, mixed $state) use ($format, $timezone): ?string {
+            if (blank($state)) {
+                return null;
+            }
+
+            return Carbon::parse($state)
+                ->setTimezone($timezone ?? $column->getTimezone())
+                ->translatedFormat($column->evaluate($format));
+        });
+
+        return $this;
+    }
+
+    public function dateTimeTooltip(string | Closure | null $format = null, ?string $timezone = null): static
+    {
+        $format ??= Table::$defaultDateTimeDisplayFormat;
+
+        $this->dateTooltip($format, $timezone);
+
+        return $this;
+    }
+
+    public function timeTooltip(string | Closure | null $format = null, ?string $timezone = null): static
+    {
+        $format ??= Table::$defaultTimeDisplayFormat;
+
+        $this->dateTooltip($format, $timezone);
+
+        return $this;
+    }
+
+    public function sinceTooltip(?string $timezone = null): static
+    {
+        $this->tooltip(static function (TextColumn $column, mixed $state) use ($timezone): ?string {
             if (blank($state)) {
                 return null;
             }
@@ -112,12 +163,13 @@ trait CanFormatState
             }
 
             $currency = $column->evaluate($currency) ?? Table::$defaultCurrency;
+            $locale = $column->evaluate($locale) ?? Table::$defaultNumberLocale ?? config('app.locale');
 
             if ($divideBy) {
                 $state /= $divideBy;
             }
 
-            return Number::currency($state, $currency, $column->evaluate($locale));
+            return Number::currency($state, $currency, $locale);
         });
 
         return $this;
@@ -136,6 +188,7 @@ trait CanFormatState
                 return $state;
             }
 
+            $decimalPlaces = $column->evaluate($decimalPlaces);
             $decimalSeparator = $column->evaluate($decimalSeparator);
             $thousandsSeparator = $column->evaluate($thousandsSeparator);
 
@@ -145,19 +198,21 @@ trait CanFormatState
             ) {
                 return number_format(
                     $state,
-                    $column->evaluate($decimalPlaces),
+                    $decimalPlaces,
                     $decimalSeparator === ArgumentValue::Default ? '.' : $decimalSeparator,
                     $thousandsSeparator === ArgumentValue::Default ? ',' : $thousandsSeparator,
                 );
             }
 
-            return Number::format($state, $decimalPlaces, $maxDecimalPlaces, locale: $column->evaluate($locale));
+            $locale = $column->evaluate($locale) ?? Table::$defaultNumberLocale ?? config('app.locale');
+
+            return Number::format($state, $decimalPlaces, $column->evaluate($maxDecimalPlaces), locale: $locale);
         });
 
         return $this;
     }
 
-    public function time(?string $format = null, ?string $timezone = null): static
+    public function time(string | Closure | null $format = null, ?string $timezone = null): static
     {
         $this->isTime = true;
 
@@ -227,6 +282,14 @@ trait CanFormatState
             'state' => $state,
         ]);
 
+        if ($isHtml) {
+            if ($this->isMarkdown()) {
+                $state = Str::markdown($state);
+            }
+
+            $state = Str::sanitizeHtml($state);
+        }
+
         if ($state instanceof Htmlable) {
             $isHtml = true;
             $state = $state->toHtml();
@@ -244,10 +307,6 @@ trait CanFormatState
             $state = Str::words($state, $wordLimit, $this->getWordLimitEnd());
         }
 
-        if ($isHtml && $this->isMarkdown()) {
-            $state = Str::markdown($state);
-        }
-
         $prefix = $this->getPrefix();
         $suffix = $this->getSuffix();
 
@@ -262,6 +321,8 @@ trait CanFormatState
         if (filled($prefix)) {
             if ($prefix instanceof Htmlable) {
                 $prefix = $prefix->toHtml();
+            } elseif ($isHtml) {
+                $prefix = e($prefix);
             }
 
             $state = $prefix . $state;
@@ -270,16 +331,14 @@ trait CanFormatState
         if (filled($suffix)) {
             if ($suffix instanceof Htmlable) {
                 $suffix = $suffix->toHtml();
+            } elseif ($isHtml) {
+                $suffix = e($suffix);
             }
 
             $state = $state . $suffix;
         }
 
-        if ($isHtml) {
-            return str($state)->sanitizeHtml()->toHtmlString();
-        }
-
-        return $state;
+        return $isHtml ? new HtmlString($state) : $state;
     }
 
     public function getCharacterLimit(): ?int

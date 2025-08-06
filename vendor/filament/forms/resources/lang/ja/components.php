@@ -11,15 +11,67 @@ return [
             ],
 
             'add' => [
+
                 'label' => ':labelを追加',
+
+                'modal' => [
+
+                    'heading' => ':labelを追加',
+
+                    'actions' => [
+
+                        'add' => [
+                            'label' => '追加',
+                        ],
+
+                    ],
+
+                ],
             ],
 
             'add_between' => [
+
                 'label' => 'ブロックの間に追加',
+
+                'modal' => [
+
+                    'heading' => ':labelを追加',
+
+                    'actions' => [
+
+                        'add' => [
+                            'label' => '追加',
+                        ],
+
+                    ],
+
+                ],
+
             ],
 
             'delete' => [
+
                 'label' => '削除',
+            ],
+
+            'edit' => [
+
+                'label' => '編集',
+
+                'modal' => [
+
+                    'heading' => 'ブロックを編集',
+
+                    'actions' => [
+
+                        'save' => [
+                            'label' => '変更を保存',
+                        ],
+
+                    ],
+
+                ],
+
             ],
 
             'reorder' => [
@@ -417,6 +469,31 @@ return [
 
     'tags_input' => [
         'placeholder' => '新規タグ',
+    ],
+
+    'text_input' => [
+
+        'actions' => [
+
+            'hide_password' => [
+                'label' => 'パスワードを非表示',
+            ],
+
+            'show_password' => [
+                'label' => 'パスワードを表示',
+            ],
+
+        ],
+
+    ],
+
+    'toggle_buttons' => [
+
+        'boolean' => [
+            'true' => 'はい',
+            'false' => 'いいえ',
+        ],
+
     ],
 
     'wizard' => [

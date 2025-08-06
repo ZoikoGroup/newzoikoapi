@@ -8,10 +8,12 @@ use Filament\Support\Commands\Concerns\CanIndentStrings;
 use Filament\Support\Commands\Concerns\CanManipulateFiles;
 use Illuminate\Console\Command;
 use Illuminate\Support\Arr;
+use Symfony\Component\Console\Attribute\AsCommand;
 
 use function Laravel\Prompts\select;
 use function Laravel\Prompts\text;
 
+#[AsCommand(name: 'make:filament-relation-manager')]
 class MakeRelationManagerCommand extends Command
 {
     use CanIndentStrings;
@@ -60,7 +62,7 @@ class MakeRelationManagerCommand extends Command
         $panel = $this->option('panel');
 
         if ($panel) {
-            $panel = Filament::getPanel($panel);
+            $panel = Filament::getPanel($panel, isStrict: false);
         }
 
         if (! $panel) {
@@ -79,6 +81,13 @@ class MakeRelationManagerCommand extends Command
 
         $resourceDirectories = $panel->getResourceDirectories();
         $resourceNamespaces = $panel->getResourceNamespaces();
+
+        foreach ($resourceDirectories as $resourceIndex => $resourceDirectory) {
+            if (str($resourceDirectory)->startsWith(base_path('vendor'))) {
+                unset($resourceDirectories[$resourceIndex]);
+                unset($resourceNamespaces[$resourceIndex]);
+            }
+        }
 
         $resourceNamespace = (count($resourceNamespaces) > 1) ?
             select(
@@ -159,8 +168,8 @@ class MakeRelationManagerCommand extends Command
             $modifyQueryUsing .= PHP_EOL . '    SoftDeletingScope::class,';
             $modifyQueryUsing .= PHP_EOL . ']))';
 
-            $tableBulkActions[] = 'Tables\Actions\RestoreBulkAction::make(),';
             $tableBulkActions[] = 'Tables\Actions\ForceDeleteBulkAction::make(),';
+            $tableBulkActions[] = 'Tables\Actions\RestoreBulkAction::make(),';
         }
 
         $tableBulkActions = implode(PHP_EOL, $tableBulkActions);

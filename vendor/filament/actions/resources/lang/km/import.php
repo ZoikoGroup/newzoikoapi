@@ -11,8 +11,15 @@ return [
         'form' => [
 
             'file' => [
+
                 'label' => 'ឯកសារ',
+
                 'placeholder' => 'ផ្ទុកឡើងឯកសារ CSV',
+
+                'rules' => [
+                    'duplicate_columns' => '{0} ឯកសារមិនត្រូវមានបឋមកថាជួរឈរទទេច្រើនជាងមួយទេ។.|{1,*} ឯកសារមិនត្រូវមានបឋមកថាជួរឈរស្ទួនទេ។: :columns.',
+                ],
+
             ],
 
             'columns' => [
@@ -72,6 +79,7 @@ return [
         'file_name' => 'import-:import_id-:csv_name-failed-rows',
         'error_header' => 'កំហុស',
         'system_error' => 'ប្រព័ន្ធមានកំហុស,សូមទាក់ទងផ្នែកជំនួយ។',
+        'column_mapping_required_for_new_record' => 'ជួរឈរ :attribute មិនត្រូវបានផ្គូផ្គងទៅនឹងជួរឈរក្នុងឯកសារនោះទេ ប៉ុន្តែវាត្រូវបានទាមទារសម្រាប់ការបង្កើតទិន្នន័យថ្មី។',
     ],
 
 ];

@@ -70,11 +70,39 @@ class Message extends Model
 }
 ```
 
+### Controlling the maximum parallel uploads
+
+You can control the maximum number of parallel uploads using the `maxParallelUploads()` method:
+
+```php
+use Filament\Forms\Components\FileUpload;
+
+FileUpload::make('attachments')
+    ->multiple()
+    ->maxParallelUploads(1)
+```
+
+This will limit the number of parallel uploads to `1`. If unset, we'll use the [default FilePond value](https://pqina.nl/filepond/docs/api/instance/properties/#core-properties) which is `2`.
+
 ## Controlling file names
 
 By default, a random file name will be generated for newly-uploaded files. This is to ensure that there are never any conflicts with existing files.
 
+### Security implications of controlling file names
+
+Before using the `preserveFilenames()` or `getUploadedFileNameForStorageUsing()` methods, please be aware of the security implications. If you allow users to upload files with their own file names, there are ways that they can exploit this to upload malicious files. **This applies even if you use the [`acceptedFileTypes()`](#file-type-validation) method** to restrict the types of files that can be uploaded, since it uses Laravel's `mimetypes` rule which does not validate the extension of the file, only its mime type, which could be manipulated.
+
+This is specifically an issue with the `getClientOriginalName()` method on the `TemporaryUploadedFile` object, which the `preserveFilenames()` method uses. By default, Livewire generates a random file name for each file uploaded, and uses the mime type of the file to determine the file extension.
+
+Using these methods **with the `local` or `public` filesystem disks** will make your app vulnerable to remote code execution if the attacker uploads a PHP file with a deceptive mime type. **Using an S3 disk protects you from this specific attack vector**, as S3 will not execute PHP files in the same way that your server might when serving files from local storage.
+
+If you are using the `local` or `public` disk, you should consider using the [`storeFileNamesIn()` method](#storing-original-file-names-independently) to store the original file names in a separate column in your database, and keep the randomly generated file names in the file system. This way, you can still display the original file names to users, while keeping the file system secure.
+
+On top of this security issue, you should also be aware that allowing users to upload files with their own file names can lead to conflicts with existing files, and can make it difficult to manage your storage. Users could upload files with the same name and overwrite the other's content if you do not scope them to a specific directory, so these features should in all cases only be accessible to trusted users.
+
 ### Preserving original file names
+
+> Important: Before using this feature, please ensure that you have read the [security implications](#security-implications-of-controlling-file-names).
 
 To preserve the original filenames of the uploaded files, use the `preserveFilenames()` method:
 
@@ -86,6 +114,8 @@ FileUpload::make('attachment')
 ```
 
 ### Generating custom file names
+
+> Important: Before using this feature, please ensure that you have read the [security implications](#security-implications-of-controlling-file-names).
 
 You may completely customize how file names are generated using the `getUploadedFileNameForStorageUsing()` method, and returning a string from the closure based on the `$file` that was uploaded:
 
@@ -111,7 +141,7 @@ FileUpload::make('attachments')
     ->storeFileNamesIn('attachment_file_names')
 ```
 
-`attachment_file_names` will now store the original file name/s of your uploaded files, so you can save them to the database when the form is submitted. If you're uploading `multiple()` files, make sure that you add an `array` [cast](https://laravel.com/docs/eloquent-mutators#array-and-json-casting) to this Eloquent model property too.
+`attachment_file_names` will now store the original file names of your uploaded files, so you can save them to the database when the form is submitted. If you're uploading `multiple()` files, make sure that you add an `array` [cast](https://laravel.com/docs/eloquent-mutators#array-and-json-casting) to this Eloquent model property too.
 
 ## Avatar mode
 
@@ -233,7 +263,7 @@ This is perfectly accompanied by the [`avatar()` method](#avatar-mode), which re
 
 ### Cropping and resizing images without the editor
 
-Filepond allows you to crop and resize images before they are uploaded, without the need for a separate editor. You can customize this behaviour using the `imageCropAspectRatio()`, `imageResizeTargetHeight()` and `imageResizeTargetWidth()` methods. `imageResizeMode()` should be set for these methods to have an effect - either [`force`, `cover`, or `contain`](https://pqina.nl/filepond/docs/api/plugins/image-resize).
+Filepond allows you to crop and resize images before they are uploaded, without the need for a separate editor. You can customize this behavior using the `imageCropAspectRatio()`, `imageResizeTargetHeight()` and `imageResizeTargetWidth()` methods. `imageResizeMode()` should be set for these methods to have an effect - either [`force`, `cover`, or `contain`](https://pqina.nl/filepond/docs/api/plugins/image-resize).
 
 ```php
 use Filament\Forms\Components\FileUpload;
@@ -261,6 +291,18 @@ FileUpload::make('attachment')
     ->removeUploadedFileButtonPosition('right')
     ->uploadButtonPosition('left')
     ->uploadProgressIndicatorPosition('left')
+```
+
+### Displaying files in a grid
+
+You can use the [Filepond `grid` layout](https://pqina.nl/filepond/docs/api/style/#grid-layout) by setting the `panelLayout()`:
+
+```php
+use Filament\Forms\Components\FileUpload;
+
+FileUpload::make('attachments')
+    ->multiple()
+    ->panelLayout('grid')
 ```
 
 ## Reordering files
@@ -350,7 +392,7 @@ Please be aware that images, video and audio files will not show the stored file
 
 ## Orienting images from their EXIF data
 
-By default, FilePond will automatically orient images based on their EXIF data. If you wish to disable this behaviour, you can use the `orientImagesFromExif(false)` method:
+By default, FilePond will automatically orient images based on their EXIF data. If you wish to disable this behavior, you can use the `orientImagesFromExif(false)` method:
 
 ```php
 use Filament\Forms\Components\FileUpload;
@@ -368,6 +410,17 @@ use Filament\Forms\Components\FileUpload;
 
 FileUpload::make('attachment')
     ->deletable(false)
+```
+
+## Preventing pasting files
+
+You can disable the ability to paste files via the clipboard using the `pasteable(false)` method:
+
+```php
+use Filament\Forms\Components\FileUpload;
+
+FileUpload::make('attachment')
+    ->pasteable(false)
 ```
 
 ## Prevent file information fetching
@@ -418,6 +471,24 @@ FileUpload::make('image')
     ->image()
 ```
 
+#### Custom MIME type mapping
+
+Some file formats may not be recognized correctly by the browser when uploading files. Filament allows you to manually define MIME types for specific file extensions using the `mimeTypeMap()` method:
+
+```php
+use Filament\Forms\Components\FileUpload;
+
+FileUpload::make('designs')
+    ->acceptedFileTypes([
+        'x-world/x-3dmf',
+        'application/vnd.sketchup.skp',
+    ])
+    ->mimeTypeMap([
+        '3dm' => 'x-world/x-3dmf',
+        'skp' => 'application/vnd.sketchup.skp',
+    ]);
+```
+
 ### File size validation
 
 You may also restrict the size of uploaded files in kilobytes:
@@ -428,6 +499,33 @@ use Filament\Forms\Components\FileUpload;
 FileUpload::make('attachment')
     ->minSize(512)
     ->maxSize(1024)
+```
+
+#### Uploading large files
+
+If you experience issues when uploading large files, such as HTTP requests failing with a response status of 422 in the browser's console, you may need to tweak your configuration.
+
+In the `php.ini` file for your server, increasing the maximum file size may fix the issue:
+
+```ini
+post_max_size = 120M
+upload_max_filesize = 120M
+```
+
+Livewire also validates file size before uploading. To publish the Livewire config file, run:
+
+```bash
+php artisan livewire:publish --config
+```
+
+The [max upload size can be adjusted in the `rules` key of `temporary_file_upload`]((https://livewire.laravel.com/docs/uploads#global-validation)). In this instance, KB are used in the rule, and 120MB is 122880KB:
+
+```php
+'temporary_file_upload' => [
+    // ...
+    'rules' => ['required', 'file', 'max:122880'],
+    // ...
+],
 ```
 
 ### Number of files validation

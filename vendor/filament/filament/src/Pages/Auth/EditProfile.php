@@ -15,33 +15,31 @@ use Filament\Pages\Concerns;
 use Filament\Pages\Page;
 use Filament\Panel;
 use Filament\Support\Enums\Alignment;
-use Filament\Support\Enums\MaxWidth;
 use Filament\Support\Exceptions\Halt;
 use Filament\Support\Facades\FilamentView;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Js;
 use Illuminate\Validation\Rules\Password;
 use Throwable;
-
-use function Filament\Support\is_app_url;
 
 /**
  * @property Form $form
  */
 class EditProfile extends Page
 {
+    use Concerns\CanUseDatabaseTransactions;
+    use Concerns\HasMaxWidth;
+    use Concerns\HasTopbar;
     use Concerns\InteractsWithFormActions;
 
     /**
      * @var array<string, mixed> | null
      */
     public ?array $data = [];
-
-    protected ?string $maxWidth = null;
 
     protected static bool $isDiscovered = false;
 
@@ -145,7 +143,7 @@ class EditProfile extends Page
     public function save(): void
     {
         try {
-            DB::beginTransaction();
+            $this->beginDatabaseTransaction();
 
             $this->callHook('beforeValidate');
 
@@ -160,19 +158,19 @@ class EditProfile extends Page
             $this->handleRecordUpdate($this->getUser(), $data);
 
             $this->callHook('afterSave');
-
-            DB::commit();
         } catch (Halt $exception) {
             $exception->shouldRollbackDatabaseTransaction() ?
-                DB::rollBack() :
-                DB::commit();
+                $this->rollBackDatabaseTransaction() :
+                $this->commitDatabaseTransaction();
 
             return;
         } catch (Throwable $exception) {
-            DB::rollBack();
+            $this->rollBackDatabaseTransaction();
 
             throw $exception;
         }
+
+        $this->commitDatabaseTransaction();
 
         if (request()->hasSession() && array_key_exists('password', $data)) {
             request()->session()->put([
@@ -186,7 +184,7 @@ class EditProfile extends Page
         $this->getSavedNotification()?->send();
 
         if ($redirectUrl = $this->getRedirectUrl()) {
-            $this->redirect($redirectUrl, navigate: FilamentView::hasSpaMode() && is_app_url($redirectUrl));
+            $this->redirect($redirectUrl, navigate: FilamentView::hasSpaMode($redirectUrl));
         }
     }
 
@@ -210,7 +208,7 @@ class EditProfile extends Page
 
         return Notification::make()
             ->success()
-            ->title($this->getSavedNotificationTitle());
+            ->title($title);
     }
 
     protected function getSavedNotificationTitle(): ?string
@@ -350,19 +348,15 @@ class EditProfile extends Page
     {
         return Action::make('back')
             ->label(__('filament-panels::pages/auth/edit-profile.actions.cancel.label'))
-            ->url(filament()->getUrl())
+            ->alpineClickHandler('document.referrer ? window.history.back() : (window.location.href = ' . Js::from(filament()->getUrl()) . ')')
             ->color('gray');
     }
 
     protected function getLayoutData(): array
     {
         return [
+            'hasTopbar' => $this->hasTopbar(),
             'maxWidth' => $this->getMaxWidth(),
         ];
-    }
-
-    public function getMaxWidth(): MaxWidth | string | null
-    {
-        return $this->maxWidth;
     }
 }

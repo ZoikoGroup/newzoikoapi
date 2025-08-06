@@ -19,16 +19,22 @@
             x-bind:class="
                 state
                     ? '{{
-                        match ($onColor) {
-                            'gray' => 'fi-color-gray bg-gray-200 dark:bg-gray-700',
-                            default => 'fi-color-custom bg-custom-600',
-                        }
+                        \Illuminate\Support\Arr::toCssClasses([
+                            match ($onColor) {
+                                'gray' => 'bg-gray-200 dark:bg-gray-700',
+                                default => 'fi-color-custom bg-custom-600',
+                            },
+                            is_string($onColor) ? "fi-color-{$onColor}" : null,
+                        ])
                     }}'
                     : '{{
-                        match ($offColor) {
-                            'gray' => 'fi-color-gray bg-gray-200 dark:bg-gray-700',
-                            default => 'fi-color-custom bg-custom-600',
-                        }
+                        \Illuminate\Support\Arr::toCssClasses([
+                            match ($offColor) {
+                                'gray' => 'bg-gray-200 dark:bg-gray-700',
+                                default => 'fi-color-custom bg-custom-600',
+                            },
+                            is_string($offColor) ? "fi-color-{$offColor}" : null,
+                        ])
                     }}'
             "
             x-bind:style="
@@ -62,7 +68,7 @@
                     ], escape: false)
                     ->merge($getExtraAttributes(), escape: false)
                     ->merge($getExtraAlpineAttributes(), escape: false)
-                    ->class(['fi-fo-toggle relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent outline-none transition-colors duration-200 ease-in-out disabled:pointer-events-none disabled:opacity-70'])
+                    ->class(['fi-fo-toggle relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent outline-none transition-colors duration-200 ease-in-out focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-70 dark:focus-visible:ring-primary-500 dark:focus-visible:ring-offset-gray-900'])
             }}
         >
             <span

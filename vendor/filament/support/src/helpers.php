@@ -50,7 +50,7 @@ if (! function_exists('Filament\Support\get_model_label')) {
 if (! function_exists('Filament\Support\locale_has_pluralization')) {
     function locale_has_pluralization(): bool
     {
-        return (new MessageSelector())->getPluralIndex(app()->getLocale(), 10) > 0;
+        return (new MessageSelector)->getPluralIndex(app()->getLocale(), 10) > 0;
     }
 }
 
@@ -137,7 +137,7 @@ if (! function_exists('Filament\Support\is_app_url')) {
 }
 
 if (! function_exists('Filament\Support\generate_href_html')) {
-    function generate_href_html(?string $url, bool $shouldOpenInNewTab = false): Htmlable
+    function generate_href_html(?string $url, bool $shouldOpenInNewTab = false, ?bool $shouldOpenInSpaMode = null): Htmlable
     {
         if (blank($url)) {
             return new HtmlString('');
@@ -147,7 +147,7 @@ if (! function_exists('Filament\Support\generate_href_html')) {
 
         if ($shouldOpenInNewTab) {
             $html .= ' target="_blank"';
-        } elseif (FilamentView::hasSpaMode() && is_app_url($url)) {
+        } elseif ($shouldOpenInSpaMode ?? (FilamentView::hasSpaMode($url))) {
             $html .= ' wire:navigate';
         }
 
@@ -163,15 +163,30 @@ if (! function_exists('Filament\Support\generate_search_column_expression')) {
     {
         $driverName = $databaseConnection->getDriverName();
 
-        if (Str::lower($column) !== $column) {
-            $column = match ($driverName) {
-                'pgsql' => (string) str($column)->wrap('"'),
-                default => $column,
-            };
-        }
-
         $column = match ($driverName) {
-            'pgsql' => "{$column}::text",
+            'pgsql' => (
+                str($column)->contains('->')
+                    ? (
+                        // Handle `table.field` part with double quotes
+                        str($column)
+                            ->before('->')
+                            ->explode('.')
+                            ->map(fn (string $part): string => (string) str($part)->wrap('"'))
+                            ->implode('.')
+                    ) . collect(str($column)->after('->')->explode('->')) // Handle JSON path parts
+                        ->map(function ($segment, $index) use ($column): string {
+                            $totalParts = substr_count($column, '->');
+
+                            return ($index === ($totalParts - 1))
+                                ? "->>'{$segment}'"
+                                : "->'{$segment}'";
+                        })
+                        ->implode('')
+                    : str($column)
+                        ->explode('.')
+                        ->map(fn (string $part): string => (string) str($part)->wrap('"'))
+                        ->implode('.')
+            ) . '::text',
             default => $column,
         };
 
@@ -181,6 +196,11 @@ if (! function_exists('Filament\Support\generate_search_column_expression')) {
         };
 
         if ($isSearchForcedCaseInsensitive) {
+            if (in_array($driverName, ['mysql', 'mariadb'], true) && str($column)->contains('->') && ! str($column)->startsWith('json_extract(')) {
+                [$field, $path] = invade($databaseConnection->getQueryGrammar())->wrapJsonFieldAndPath($column); /** @phpstan-ignore-line */
+                $column = "json_extract({$field}{$path})";
+            }
+
             $column = "lower({$column})";
         }
 

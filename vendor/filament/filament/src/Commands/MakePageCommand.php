@@ -10,11 +10,14 @@ use Filament\Support\Commands\Concerns\CanManipulateFiles;
 use Illuminate\Console\Command;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
+use Symfony\Component\Console\Attribute\AsCommand;
 
 use function Laravel\Prompts\confirm;
 use function Laravel\Prompts\select;
+use function Laravel\Prompts\suggest;
 use function Laravel\Prompts\text;
 
+#[AsCommand(name: 'make:filament-page')]
 class MakePageCommand extends Command
 {
     use CanIndentStrings;
@@ -47,8 +50,46 @@ class MakePageCommand extends Command
         $resourceClass = null;
         $resourcePage = null;
 
-        $resourceInput = $this->option('resource') ?? text(
-            label: 'What is the resource you would like to create this in?',
+        $panel = $this->option('panel');
+
+        if ($panel) {
+            $panel = Filament::getPanel($panel, isStrict: false);
+        }
+
+        if (! $panel) {
+            $panels = Filament::getPanels();
+
+            /** @var Panel $panel */
+            $panel = (count($panels) > 1) ? $panels[select(
+                label: 'Which panel would you like to create this in?',
+                options: array_map(
+                    fn (Panel $panel): string => $panel->getId(),
+                    $panels,
+                ),
+                default: Filament::getDefaultPanel()->getId()
+            )] : Arr::first($panels);
+        }
+
+        $resourceDirectories = $panel->getResourceDirectories();
+        $resourceNamespaces = $panel->getResourceNamespaces();
+
+        foreach ($resourceDirectories as $resourceIndex => $resourceDirectory) {
+            if (str($resourceDirectory)->startsWith(base_path('vendor'))) {
+                unset($resourceDirectories[$resourceIndex]);
+                unset($resourceNamespaces[$resourceIndex]);
+            }
+        }
+
+        $resourceInput = $this->option('resource') ?? suggest(
+            label: 'Which resource would you like to create this in?',
+            options: collect($panel->getResources())
+                ->filter(fn (string $namespace): bool => str($namespace)->contains('\\Resources\\') && str($namespace)->startsWith($resourceNamespaces))
+                ->map(
+                    fn (string $namespace): string => (string) str($namespace)
+                        ->afterLast('\\Resources\\')
+                        ->beforeLast('Resource')
+                )
+                ->all(),
             placeholder: '[Optional] UserResource',
         );
 
@@ -160,29 +201,16 @@ class MakePageCommand extends Command
             }
         }
 
-        $panel = $this->option('panel');
-
-        if ($panel) {
-            $panel = Filament::getPanel($panel);
-        }
-
-        if (! $panel) {
-            $panels = Filament::getPanels();
-
-            /** @var Panel $panel */
-            $panel = (count($panels) > 1) ? $panels[select(
-                label: 'Which panel would you like to create this in?',
-                options: array_map(
-                    fn (Panel $panel): string => $panel->getId(),
-                    $panels,
-                ),
-                default: Filament::getDefaultPanel()->getId()
-            )] : Arr::first($panels);
-        }
-
         if (empty($resource)) {
             $pageDirectories = $panel->getPageDirectories();
             $pageNamespaces = $panel->getPageNamespaces();
+
+            foreach ($pageDirectories as $pageIndex => $pageDirectory) {
+                if (str($pageDirectory)->startsWith(base_path('vendor'))) {
+                    unset($pageDirectories[$pageIndex]);
+                    unset($pageNamespaces[$pageIndex]);
+                }
+            }
 
             $namespace = (count($pageNamespaces) > 1) ?
                 select(
@@ -196,6 +224,13 @@ class MakePageCommand extends Command
         } else {
             $resourceDirectories = $panel->getResourceDirectories();
             $resourceNamespaces = $panel->getResourceNamespaces();
+
+            foreach ($resourceDirectories as $resourceIndex => $resourceDirectory) {
+                if (str($resourceDirectory)->startsWith(base_path('vendor'))) {
+                    unset($resourceDirectories[$resourceIndex]);
+                    unset($resourceNamespaces[$resourceIndex]);
+                }
+            }
 
             $resourceNamespace = (count($resourceNamespaces) > 1) ?
                 select(

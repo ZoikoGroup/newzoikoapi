@@ -1,8 +1,14 @@
+@php
+    $locale = app()->getLocale();
+@endphp
+
 @props([
     'allSelectableRecordsCount',
     'deselectAllRecordsAction' => 'deselectAllRecords',
     'end' => null,
+    'page' => null,
     'selectAllRecordsAction' => 'selectAllRecords',
+    'selectCurrentPageOnly' => false,
     'selectedRecordsCount',
     'selectedRecordsPropertyName' => 'selectedRecords',
 ])
@@ -28,7 +34,9 @@
         <span
             x-text="
                 window.pluralize(@js(__('filament-tables::table.selection_indicator.selected_count')), {{ $selectedRecordsPropertyName }}.length, {
-                    count: {{ $selectedRecordsPropertyName }}.length,
+                    count: new Intl.NumberFormat(@js(str_replace('_', '-', $locale))).format(
+                        {{ $selectedRecordsPropertyName }}.length,
+                    ),
                 })
             "
             class="text-sm font-medium leading-6 text-gray-700 dark:text-gray-200"
@@ -36,23 +44,30 @@
     </div>
 
     <div class="flex gap-x-3">
-        <x-filament::link
-            color="primary"
-            :id="$this->getId() . '.table.selection.indicator.record-count.' . $allSelectableRecordsCount"
-            tag="button"
-            :x-on:click="$selectAllRecordsAction"
-            :x-show="$allSelectableRecordsCount . ' !== ' . $selectedRecordsPropertyName . '.length'"
-        >
-            {{ trans_choice('filament-tables::table.selection_indicator.actions.select_all.label', $allSelectableRecordsCount) }}
-        </x-filament::link>
+        {{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\Tables\View\TablesRenderHook::SELECTION_INDICATOR_ACTIONS_BEFORE, scopes: static::class) }}
 
-        <x-filament::link
-            color="danger"
-            tag="button"
-            :x-on:click="$deselectAllRecordsAction"
-        >
-            {{ __('filament-tables::table.selection_indicator.actions.deselect_all.label') }}
-        </x-filament::link>
+        <div class="flex gap-x-3">
+            <x-filament::link
+                color="primary"
+                tag="button"
+                :x-on:click="$selectAllRecordsAction"
+                :x-show="$selectCurrentPageOnly ? '! areRecordsSelected(getRecordsOnPage())' : $allSelectableRecordsCount . ' !== ' . $selectedRecordsPropertyName . '.length'"
+                {{-- Make sure the Alpine attributes get re-evaluated after a Livewire request: --}}
+                :wire:key="$this->getId() . 'table.selection.indicator.actions.select-all.' . $allSelectableRecordsCount . '.' . $page"
+            >
+                {{ trans_choice('filament-tables::table.selection_indicator.actions.select_all.label', $allSelectableRecordsCount, ['count' => \Illuminate\Support\Number::format($allSelectableRecordsCount, locale: $locale)]) }}
+            </x-filament::link>
+
+            <x-filament::link
+                color="danger"
+                tag="button"
+                :x-on:click="$deselectAllRecordsAction"
+            >
+                {{ __('filament-tables::table.selection_indicator.actions.deselect_all.label') }}
+            </x-filament::link>
+        </div>
+
+        {{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\Tables\View\TablesRenderHook::SELECTION_INDICATOR_ACTIONS_AFTER, scopes: static::class) }}
 
         {{ $end }}
     </div>

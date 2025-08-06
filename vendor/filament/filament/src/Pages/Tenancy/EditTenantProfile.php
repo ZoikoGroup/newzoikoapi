@@ -15,18 +15,17 @@ use Filament\Support\Facades\FilamentView;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Locked;
 use Throwable;
 
 use function Filament\authorize;
-use function Filament\Support\is_app_url;
 
 /**
  * @property Form $form
  */
 abstract class EditTenantProfile extends Page
 {
+    use Concerns\CanUseDatabaseTransactions;
     use Concerns\HasRoutes;
     use Concerns\InteractsWithFormActions;
 
@@ -110,7 +109,7 @@ abstract class EditTenantProfile extends Page
     public function save(): void
     {
         try {
-            DB::beginTransaction();
+            $this->beginDatabaseTransaction();
 
             $this->callHook('beforeValidate');
 
@@ -125,24 +124,24 @@ abstract class EditTenantProfile extends Page
             $this->handleRecordUpdate($this->tenant, $data);
 
             $this->callHook('afterSave');
-
-            DB::commit();
         } catch (Halt $exception) {
             $exception->shouldRollbackDatabaseTransaction() ?
-                DB::rollBack() :
-                DB::commit();
+                $this->rollBackDatabaseTransaction() :
+                $this->commitDatabaseTransaction();
 
             return;
         } catch (Throwable $exception) {
-            DB::rollBack();
+            $this->rollBackDatabaseTransaction();
 
             throw $exception;
         }
 
+        $this->commitDatabaseTransaction();
+
         $this->getSavedNotification()?->send();
 
         if ($redirectUrl = $this->getRedirectUrl()) {
-            $this->redirect($redirectUrl, navigate: FilamentView::hasSpaMode() && is_app_url($redirectUrl));
+            $this->redirect($redirectUrl, navigate: FilamentView::hasSpaMode($redirectUrl));
         }
     }
 
@@ -166,7 +165,7 @@ abstract class EditTenantProfile extends Page
 
         return Notification::make()
             ->success()
-            ->title($this->getSavedNotificationTitle());
+            ->title($title);
     }
 
     protected function getSavedNotificationTitle(): ?string

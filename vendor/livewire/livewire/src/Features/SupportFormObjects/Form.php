@@ -159,6 +159,38 @@ class Form implements Arrayable
         }
     }
 
+    public function resetExcept(...$properties)
+    {
+        if (count($properties) && is_array($properties[0])) {
+            $properties = $properties[0];
+        }
+
+        $keysToReset = array_diff(array_keys($this->all()), $properties);
+
+        if($keysToReset === []) {
+            return;
+        }
+
+        $this->reset($keysToReset);
+    }
+
+    public function pull($properties = null)
+    {
+        $wantsASingleValue = is_string($properties);
+
+        $properties = is_array($properties) ? $properties : func_get_args();
+
+        $beforeReset = match (true) {
+            empty($properties) => $this->all(),
+            $wantsASingleValue => $this->getPropertyValue($properties[0]),
+            default => $this->only($properties),
+        };
+
+        $this->reset($properties);
+
+        return $beforeReset;
+    }
+
     public function toArray()
     {
         return Utils::getPublicProperties($this);

@@ -24,6 +24,7 @@ use App\Http\Controllers\Api\CurrencyController;
 use App\Http\Controllers\Api\FaqController;
 use App\Http\Controllers\Api\MenuController;
 use App\Http\Controllers\Api\MenuItemController;
+use App\Http\Controllers\ApiController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -56,6 +57,7 @@ Route::post('/get/contact/entries', [ContactController::class, 'get_messages'])-
 Route::delete('/delete/contact/entry/{id}', [ContactController::class, 'destroy'])->middleware('auth:api');
 
 Route::group(['namespace' => 'api', 'prefix' => 'v1'], function () {
+    Route::post('test-api', [ApiController::class, 'api_test']);
     Route::post('login', [AuthenticationController::class, 'store']);
     Route::post('register', [AuthenticationController::class, 'register']);
     Route::get('users', [AuthenticationController::class, 'get_all_users'])->middleware('auth:api');
@@ -177,7 +179,7 @@ Route::group(['namespace' => 'api', 'prefix' => 'v1'], function () {
     // Order items
     Route::post('order/item/create', [OrderItemController::class, 'store'])->middleware('auth:api');
 
-    // Email Templates
+    // Email Templates//
     Route::post('email-template/create', [EmailTemplateController::class, 'store'])->middleware('auth:api');
     Route::post('email-template/update/{id}', [EmailTemplateController::class, 'update'])->middleware('auth:api');
     Route::get('email-templates', [EmailTemplateController::class, 'index'])->middleware('auth:api');

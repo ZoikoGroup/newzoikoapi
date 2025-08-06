@@ -49,7 +49,11 @@ class DateTimePicker extends Field implements Contracts\HasAffixActions
 
     protected CarbonInterface | string | Closure | null $minDate = null;
 
+    protected CarbonInterface | string | Closure | null $defaultFocusedDate = null;
+
     protected string | Closure | null $timezone = null;
+
+    protected string | Closure | null $locale = null;
 
     /**
      * @var array<DateTime | string> | Closure
@@ -83,7 +87,7 @@ class DateTimePicker extends Field implements Contracts\HasAffixActions
 
             if (! $state instanceof CarbonInterface) {
                 try {
-                    $state = Carbon::createFromFormat($component->getFormat(), $state, config('app.timezone'));
+                    $state = Carbon::createFromFormat($component->getFormat(), (string) $state, config('app.timezone'));
                 } catch (InvalidFormatException $exception) {
                     try {
                         $state = Carbon::parse($state, config('app.timezone'));
@@ -214,6 +218,13 @@ class DateTimePicker extends Field implements Contracts\HasAffixActions
         return $this;
     }
 
+    public function defaultFocusedDate(CarbonInterface | string | Closure | null $date): static
+    {
+        $this->defaultFocusedDate = $date;
+
+        return $this;
+    }
+
     /**
      * @param  array<DateTime | string> | Closure  $dates
      */
@@ -255,6 +266,13 @@ class DateTimePicker extends Field implements Contracts\HasAffixActions
     public function timezone(string | Closure | null $timezone): static
     {
         $this->timezone = $timezone;
+
+        return $this;
+    }
+
+    public function locale(string | Closure | null $locale): static
+    {
+        $this->locale = $locale;
 
         return $this;
     }
@@ -359,7 +377,7 @@ class DateTimePicker extends Field implements Contracts\HasAffixActions
      */
     public function getExtraTriggerAttributes(): array
     {
-        $temporaryAttributeBag = new ComponentAttributeBag();
+        $temporaryAttributeBag = new ComponentAttributeBag;
 
         foreach ($this->extraTriggerAttributes as $extraTriggerAttributes) {
             $temporaryAttributeBag = $temporaryAttributeBag->merge($this->evaluate($extraTriggerAttributes));
@@ -411,6 +429,11 @@ class DateTimePicker extends Field implements Contracts\HasAffixActions
         return $this->evaluate($this->minDate);
     }
 
+    public function getDefaultFocusedDate(): ?string
+    {
+        return $this->evaluate($this->defaultFocusedDate);
+    }
+
     /**
      * @return array<DateTime | string>
      */
@@ -422,6 +445,11 @@ class DateTimePicker extends Field implements Contracts\HasAffixActions
     public function getTimezone(): string
     {
         return $this->evaluate($this->timezone) ?? config('app.timezone');
+    }
+
+    public function getLocale(): string
+    {
+        return $this->evaluate($this->locale) ?? config('app.locale');
     }
 
     public function hasDate(): bool

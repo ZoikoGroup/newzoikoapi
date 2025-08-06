@@ -12,14 +12,43 @@ return [
 
             'add' => [
                 'label' => 'Ajouter à :label',
+                'modal' => [
+                    'heading' => 'Ajouter à :label',
+                    'actions' => [
+                        'add' => [
+                            'label' => 'Ajouter',
+                        ],
+                    ],
+                ],
             ],
 
             'add_between' => [
                 'label' => 'Ajouter entre',
+                'modal' => [
+                    'heading' => 'Ajouter à :label',
+                    'actions' => [
+                        'add' => [
+                            'label' => 'Ajouter',
+                        ],
+                    ],
+                ],
             ],
 
             'delete' => [
                 'label' => 'Supprimer',
+            ],
+
+            'edit' => [
+                'label' => 'Modifier',
+                'modal' => [
+                    'heading' => 'Modifier',
+                    'actions' => [
+                        'save' => [
+                            'label' => 'Sauvegarder',
+                        ],
+                    ],
+                ],
+
             ],
 
             'reorder' => [
@@ -355,7 +384,7 @@ return [
         'actions' => [
 
             'create_option' => [
-
+                'label' => 'Créer',
                 'modal' => [
 
                     'heading' => 'Créer',
@@ -377,7 +406,7 @@ return [
             ],
 
             'edit_option' => [
-
+                'label' => 'Modifier',
                 'modal' => [
 
                     'heading' => 'Modifier',

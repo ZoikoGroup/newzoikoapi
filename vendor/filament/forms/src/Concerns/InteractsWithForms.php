@@ -4,13 +4,16 @@ namespace Filament\Forms\Concerns;
 
 use Closure;
 use Exception;
+use Filament\Forms\ComponentContainer;
 use Filament\Forms\Components\Component;
 use Filament\Forms\Form;
 use Filament\Infolists\Infolist;
 use Filament\Support\Concerns\ResolvesDynamicLivewireProperties;
 use Filament\Support\Contracts\TranslatableContentDriver;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Arr;
 use Illuminate\Validation\ValidationException;
+use Livewire\Attributes\Locked;
 use Livewire\Attributes\Renderless;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Livewire\WithFileUploads;
@@ -26,6 +29,9 @@ trait InteractsWithForms
      */
     public array $componentFileAttachments = [];
 
+    #[Locked]
+    public bool $areFormStateUpdateHooksDisabledForTesting = false;
+
     /**
      * @var array<string, Form>
      */
@@ -34,6 +40,8 @@ trait InteractsWithForms
     protected bool $hasCachedForms = false;
 
     protected bool $isCachingForms = false;
+
+    protected ?ComponentContainer $currentlyValidatingForm = null;
 
     protected bool $hasFormsModalRendered = false;
 
@@ -46,6 +54,51 @@ trait InteractsWithForms
     {
         foreach ($this->getCachedForms() as $form) {
             $form->dispatchEvent(...$args);
+        }
+    }
+
+    /**
+     * @param  array<mixed>  $state
+     */
+    public function fillFormDataForTesting(array $state = []): void
+    {
+        if (! app()->runningUnitTests()) {
+            return;
+        }
+
+        foreach (Arr::dot($state) as $statePath => $value) {
+            $this->updatingInteractsWithForms($statePath);
+
+            data_set($this, $statePath, $value);
+
+            $this->updatedInteractsWithForms($statePath);
+        }
+
+        foreach ($state as $statePath => $value) {
+            if (! is_array($value)) {
+                continue;
+            }
+
+            $this->unsetMissingNumericArrayKeys($this->{$statePath}, $value);
+        }
+    }
+
+    /**
+     * @param  array<mixed>  $target
+     * @param  array<mixed>  $state
+     */
+    protected function unsetMissingNumericArrayKeys(array &$target, array $state): void
+    {
+        foreach ($target as $key => $value) {
+            if (is_numeric($key) && (! array_key_exists($key, $state))) {
+                unset($target[$key]);
+
+                continue;
+            }
+
+            if (is_array($value) && is_array($state[$key] ?? null)) {
+                $this->unsetMissingNumericArrayKeys($target[$key], $state[$key]);
+            }
         }
     }
 
@@ -199,9 +252,7 @@ trait InteractsWithForms
         }
     }
 
-    protected function onValidationError(ValidationException $exception): void
-    {
-    }
+    protected function onValidationError(ValidationException $exception): void {}
 
     /**
      * @param  array<string, mixed>  $attributes
@@ -209,8 +260,12 @@ trait InteractsWithForms
      */
     protected function prepareForValidation($attributes): array
     {
-        foreach ($this->getCachedForms() as $form) {
-            $attributes = $form->mutateStateForValidation($attributes);
+        if ($this->currentlyValidatingForm) {
+            $attributes = $this->currentlyValidatingForm->mutateStateForValidation($attributes);
+        } else {
+            foreach ($this->getCachedForms() as $form) {
+                $attributes = $form->mutateStateForValidation($attributes);
+            }
         }
 
         return $attributes;
@@ -244,7 +299,8 @@ trait InteractsWithForms
     {
         $statePath = (string) str($statePath)->before('.');
 
-        $this->oldFormState[$statePath] = data_get($this, $statePath);
+        // https://github.com/filamentphp/filament/pull/13973
+        $this->oldFormState[$statePath] ??= data_get($this, $statePath);
     }
 
     public function getOldFormState(string $statePath): mixed
@@ -254,9 +310,31 @@ trait InteractsWithForms
 
     public function updatedInteractsWithForms(string $statePath): void
     {
+        if (app()->runningUnitTests() && $this->areFormStateUpdateHooksDisabledForTesting) {
+            return;
+        }
+
         foreach ($this->getCachedForms() as $form) {
             $form->callAfterStateUpdated($statePath);
         }
+    }
+
+    public function disableFormStateUpdateHooksForTesting(): void
+    {
+        if (! app()->runningUnitTests()) {
+            return;
+        }
+
+        $this->areFormStateUpdateHooksDisabledForTesting = true;
+    }
+
+    public function enableFormStateUpdateHooksForTesting(): void
+    {
+        if (! app()->runningUnitTests()) {
+            return;
+        }
+
+        $this->areFormStateUpdateHooksDisabledForTesting = false;
     }
 
     protected function cacheForm(string $name, Form | Closure | null $form): ?Form
@@ -460,5 +538,10 @@ trait InteractsWithForms
     public function mountedFormComponentActionInfolist(): Infolist
     {
         return $this->getMountedFormComponentAction()->getInfolist();
+    }
+
+    public function currentlyValidatingForm(?ComponentContainer $form): void
+    {
+        $this->currentlyValidatingForm = $form;
     }
 }

@@ -24,7 +24,7 @@ You can find the final code for this plugin at [https://github.com/awcodes/clock
 
 First, we'll create the plugin using the steps outlined in the [getting started guide](/docs/3.x/support/plugins/getting-started#creating-a-plugin).
 
-## Step 2: Clean Up
+## Step 2: Clean up
 
 Next, we'll clean up the plugin to remove the boilerplate code we don't need. This will seem like a lot, but since this is a simple plugin, we can remove a lot of the boilerplate code.
 
@@ -88,7 +88,7 @@ npm install
 
 You may also remove the Testing directories and files, but we'll leave them in for now, although we won't be using them for this example, and we highly recommend that you write tests for your plugins.
 
-## Step 3: Setting up the Provider
+## Step 3: Setting up the provider
 
 Now that we have our plugin cleaned up, we can start adding our code. The boilerplate in the `src/ClockWidgetServiceProvider.php` file has a lot going on so, let's delete everything and start from scratch.
 
@@ -129,7 +129,7 @@ class ClockWidgetServiceProvider extends PackageServiceProvider
 }
 ```
 
-## Step 4: Create the Widget
+## Step 4: Create the widget
 
 Now we can create our widget. We'll first need to extend Filament's `Widget` class in our `ClockWidget.php` file and tell it where to find the view for the widget. Since we are using the PackageServiceProvider to register our views, we can use the `::` syntax to tell Filament where to find the view.
 
@@ -144,7 +144,7 @@ class ClockWidget extends Widget
 
 Next, we'll need to create the view for our widget. Create a new file at `resources/views/widget.blade.php` and add the following code. We'll make use of Filament's blade components to save time on writing the html for the widget.
 
-We are using async Alpine to load our Alpine component, so we'll need to add the `x-ignore` attribute to the div that will load our component. We'll also need to add the `ax-load` attribute to the div to tell Alpine to load our component. You can learn more about this in the [Core Concepts](/docs/3.x/support/assets#asynchronous-alpinejs-components) section of the docs.
+We are using async Alpine to load our Alpine component, so we'll need to add the `x-load` attribute to the div to tell Alpine to load our component. You can learn more about this in the [Core Concepts](/docs/3.x/support/assets#asynchronous-alpinejs-components) section of the docs.
 
 ```blade
 <x-filament-widgets::widget>
@@ -154,9 +154,8 @@ We are using async Alpine to load our Alpine component, so we'll need to add the
         </x-slot>
 
         <div
-            x-ignore
-            ax-load
-            ax-load-src="{{ \Filament\Support\Facades\FilamentAsset::getAlpineComponentSrc('clock-widget', 'awcodes/clock-widget') }}"
+            x-load
+            x-load-src="{{ \Filament\Support\Facades\FilamentAsset::getAlpineComponentSrc('clock-widget', 'awcodes/clock-widget') }}"
             x-data="clockWidget()"
             class="text-center"
         >
@@ -191,7 +190,7 @@ return [
 ];
 ```
 
-## Step 5: Update your Readme
+## Step 5: Update your README
 
 You'll want to update your `README.md` file to include instructions on how to install your plugin and any other information you want to share with users, Like how to use it in their projects. For example:
 

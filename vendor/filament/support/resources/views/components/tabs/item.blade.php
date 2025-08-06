@@ -8,10 +8,13 @@
     'badge' => null,
     'badgeColor' => null,
     'badgeTooltip' => null,
+    'badgeIcon' => null,
+    'badgeIconPosition' => IconPosition::Before,
     'href' => null,
     'icon' => null,
     'iconColor' => 'gray',
     'iconPosition' => IconPosition::Before,
+    'spaMode' => null,
     'tag' => 'button',
     'target' => null,
     'type' => 'button',
@@ -44,11 +47,11 @@
     @if ($tag === 'button')
         type="{{ $type }}"
     @elseif ($tag === 'a')
-        {{ \Filament\Support\generate_href_html($href, $target === '_blank') }}
+        {{ \Filament\Support\generate_href_html($href, $target === '_blank', $spaMode) }}
     @endif
     @if ($hasAlpineActiveClasses)
         x-bind:class="{
-            @js($inactiveItemClasses): ! {{ $alpineActive }},
+            @js($inactiveItemClasses): {{-- format-ignore-start --}} ! ({{ $alpineActive }}) {{-- format-ignore-end --}},
             @js($activeItemClasses): {{ $alpineActive }},
         }"
     @endif
@@ -59,7 +62,7 @@
                 'role' => 'tab',
             ])
             ->class([
-                'fi-tabs-item group flex items-center gap-x-2 rounded-lg px-3 py-2 text-sm font-medium outline-none transition duration-75',
+                'fi-tabs-item group flex items-center justify-center gap-x-2 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium outline-none transition duration-75',
                 $inactiveItemClasses => (! $hasAlpineActiveClasses) && (! $active),
                 $activeItemClasses => (! $hasAlpineActiveClasses) && $active,
             ])
@@ -80,7 +83,7 @@
     <span
         @if ($hasAlpineActiveClasses)
             x-bind:class="{
-                @js($inactiveLabelClasses): ! {{ $alpineActive }},
+                @js($inactiveLabelClasses): {{-- format-ignore-start --}} ! ({{ $alpineActive }}) {{-- format-ignore-end --}},
                 @js($activeLabelClasses): {{ $alpineActive }},
             }"
         @endif
@@ -108,6 +111,8 @@
     @if (filled($badge))
         <x-filament::badge
             :color="$badgeColor"
+            :icon="$badgeIcon"
+            :icon-position="$badgeIconPosition"
             size="sm"
             :tooltip="$badgeTooltip"
             class="w-max"

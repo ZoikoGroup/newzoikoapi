@@ -131,7 +131,7 @@ The field value must be different to another. [See the Laravel documentation.](h
 Field::make('backup_email')->different('email')
 ```
 
-### Doesnt Start With
+### Doesn't Start With
 
 The field must not start with one of the given values. [See the Laravel documentation.](https://laravel.com/docs/validation#rule-doesnt-start-with)
 
@@ -139,7 +139,7 @@ The field must not start with one of the given values. [See the Laravel document
 Field::make('name')->doesntStartWith(['admin'])
 ```
 
-### Doesnt End With
+### Doesn't End With
 
 The field must not end with one of the given values. [See the Laravel documentation.](https://laravel.com/docs/validation#rule-doesnt-end-with)
 
@@ -185,7 +185,7 @@ By default, the field name will be used as the column to search. You may specify
 Field::make('invitation')->exists(column: 'id')
 ```
 
-You can further customize the rule by passing a [closure](advanced#closure-customization) to the `callback` parameter:
+You can further customize the rule by passing a [closure](advanced#closure-customization) to the `modifyRuleUsing` parameter:
 
 ```php
 use Illuminate\Validation\Rules\Exists;
@@ -359,6 +359,14 @@ The field value must not be empty _only if_ the other specified field has any of
 Field::make('name')->requiredIf('field', 'value')
 ```
 
+### Required If Accepted
+
+The field value must not be empty _only if_ the other specified field is equal to "yes", "on", 1, "1", true, or "true". [See the Laravel documentation.](https://laravel.com/docs/validation#rule-required-if-accepted)
+
+```php
+Field::make('name')->requiredIfAccepted('field')
+```
+
 ### Required Unless
 
 The field value must not be empty _unless_ the other specified field has any of the given values. [See the Laravel documentation.](https://laravel.com/docs/validation#rule-required-unless)
@@ -513,13 +521,13 @@ TextInput::make('slug')->rules([new Uppercase()])
 You may also use [closure rules](https://laravel.com/docs/validation#using-closures):
 
 ```php
+use Closure;
+
 TextInput::make('slug')->rules([
-    function () {
-        return function (string $attribute, $value, Closure $fail) {
-            if ($value === 'foo') {
-                $fail('The :attribute is invalid.');
-            }
-        };
+    fn (): Closure => function (string $attribute, $value, Closure $fail) {
+        if ($value === 'foo') {
+            $fail('The :attribute is invalid.');
+        }
     },
 ])
 ```

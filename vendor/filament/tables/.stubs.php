@@ -3,6 +3,7 @@
 namespace Livewire\Features\SupportTesting {
 
     use Closure;
+    use Illuminate\Database\Eloquent\Model;
     use Illuminate\Support\Collection;
 
     class Testable {
@@ -12,7 +13,7 @@ namespace Livewire\Features\SupportTesting {
 
         public function setTableActionData(array $data): static {}
 
-        public function assertTableActionDataSet(array $data): static {}
+        public function assertTableActionDataSet(array | Closure $state): static {}
 
         public function callTableAction(string | array $name, $record = null, array $data = [], array $arguments = []): static {}
 
@@ -20,9 +21,9 @@ namespace Livewire\Features\SupportTesting {
 
         public function callMountedTableAction(array $arguments = []): static {}
 
-        public function assertTableActionExists(string | array $name): static {}
+        public function assertTableActionExists(string | array $name, ?Closure $checkActionUsing = null, $record = null): static {}
 
-        public function assertTableActionDoesNotExist(string | array $name): static {}
+        public function assertTableActionDoesNotExist(string | array $name, ?Closure $checkActionUsing = null, $record = null): static {}
 
         public function assertTableActionsExistInOrder(array $names): static {}
 
@@ -52,7 +53,7 @@ namespace Livewire\Features\SupportTesting {
 
         public function setTableBulkActionData(array $data): static {}
 
-        public function assertTableBulkActionDataSet(array $data): static {}
+        public function assertTableBulkActionDataSet(array | Closure $state): static {}
 
         public function callTableBulkAction(string $name, array | Collection $records, array $data = [], array $arguments = []): static {}
 
@@ -72,37 +73,37 @@ namespace Livewire\Features\SupportTesting {
 
         public function assertTableBulkActionDisabled(string $name): static {}
 
-        public function assertTableActionHasIcon(string | array $name, string $icon): static {}
+        public function assertTableActionHasIcon(string | array $name, string $icon, $record = null): static {}
 
-        public function assertTableActionDoesNotHaveIcon(string | array $name, string $icon): static {}
+        public function assertTableActionDoesNotHaveIcon(string | array $name, string $icon, $record = null): static {}
 
-        public function assertTableActionHasLabel(string | array $name, string $label): static {}
+        public function assertTableActionHasLabel(string | array $name, string $label, $record = null): static {}
 
-        public function assertTableActionDoesNotHaveLabel(string | array $name, string $label): static {}
+        public function assertTableActionDoesNotHaveLabel(string | array $name, string $label, $record = null): static {}
 
-        public function assertTableActionHasColor(string | array $name, string | array $color): static {}
+        public function assertTableActionHasColor(string | array $name, string | array $color, $record = null): static {}
 
-        public function assertTableActionDoesNotHaveColor(string | array $name, string | array $color): static {}
+        public function assertTableActionDoesNotHaveColor(string | array $name, string | array $color, $record = null): static {}
 
-        public function assertTableBulkActionHasIcon(string $name, string $icon): static {}
+        public function assertTableBulkActionHasIcon(string $name, string $icon, $record = null): static {}
 
-        public function assertTableBulkActionDoesNotHaveIcon(string $name, string $icon): static {}
+        public function assertTableBulkActionDoesNotHaveIcon(string $name, string $icon, $record = null): static {}
 
-        public function assertTableBulkActionHasLabel(string $name, string $label): static {}
+        public function assertTableBulkActionHasLabel(string $name, string $label, $record = null): static {}
 
-        public function assertTableBulkActionDoesNotHaveLabel(string $name, string $label): static {}
+        public function assertTableBulkActionDoesNotHaveLabel(string $name, string $label, $record = null): static {}
 
         public function assertTableBulkActionHasColor(string $name, string | array $color): static {}
 
         public function assertTableBulkActionDoesNotHaveColor(string $name, string | array $color): static {}
 
-        public function assertTableActionHasUrl(string | array $name, string $url): static {}
+        public function assertTableActionHasUrl(string | array $name, string $url, $record = null): static {}
 
-        public function assertTableActionDoesNotHaveUrl(string | array $name, string $url): static {}
+        public function assertTableActionDoesNotHaveUrl(string | array $name, string $url, $record = null): static {}
 
-        public function assertTableActionShouldOpenUrlInNewTab(string | array $name): static {}
+        public function assertTableActionShouldOpenUrlInNewTab(string | array $name, $record = null): static {}
 
-        public function assertTableActionShouldNotOpenUrlInNewTab(string | array $name): static {}
+        public function assertTableActionShouldNotOpenUrlInNewTab(string | array $name, $record = null): static {}
 
         public function assertTableBulkActionMounted(string $name): static {}
 
@@ -119,6 +120,8 @@ namespace Livewire\Features\SupportTesting {
         public function assertCanNotRenderTableColumn(string $name): static {}
 
         public function assertTableColumnExists(string $name, ?Closure $checkColumnUsing = null, $record = null): static {}
+
+        public function assertTableColumnDoesNotExist(string $name, ?Closure $checkColumnUsing = null, $record = null): static {}
 
         public function assertTableColumnVisible(string $name): static {}
 
@@ -163,6 +166,12 @@ namespace Livewire\Features\SupportTesting {
         public function removeTableFilter(string $filter, ?string $field = null): static {}
 
         public function removeTableFilters(): static {}
+
+        public function assertTableFilterVisible(string $name): static {}
+
+        public function assertTableFilterHidden(string $name): static {}
+
+        public function assertTableFilterExists(string $name, ?Closure $checkFilterUsing = null): static {}
 
         public function assertCanSeeTableRecords(array | Collection $records, bool $inOrder = false): static {}
 

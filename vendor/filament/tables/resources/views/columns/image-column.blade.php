@@ -1,6 +1,13 @@
 @php
+    $state = $getState();
+
+    if ($state instanceof \Illuminate\Support\Collection) {
+        $state = $state->all();
+    }
+
+    $state = \Illuminate\Support\Arr::wrap($state);
+
     $limit = $getLimit();
-    $state = \Illuminate\Support\Arr::wrap($getState());
     $limitedState = array_slice($state, 0, $limit);
     $isCircular = $isCircular();
     $isSquare = $isSquare();
@@ -77,7 +84,7 @@
             >
                 @foreach ($limitedState as $stateItem)
                     <img
-                        src="{{ filled($stateItem) ? $getImageUrl($stateItem) : $defaultImageUrl }}"
+                        src="{{ filled($stateItem) ? ($getImageUrl($stateItem) ?? $defaultImageUrl) : $defaultImageUrl }}"
                         {{
                             $getExtraImgAttributeBag()
                                 ->class([
@@ -95,10 +102,6 @@
 
                 @if ($hasLimitedRemainingText && (! $isLimitedRemainingTextSeparate) && $isCircular)
                     <div
-                        style="
-                            @if ($height) height: {{ $height }}; @endif
-                            @if ($width) width: {{ $width }}; @endif
-                        "
                         @class([
                             'flex items-center justify-center bg-gray-100 font-medium text-gray-500 dark:bg-gray-800 dark:text-gray-400',
                             'rounded-full' => $isCircular,

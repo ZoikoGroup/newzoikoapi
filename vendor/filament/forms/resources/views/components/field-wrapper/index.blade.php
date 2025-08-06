@@ -19,6 +19,7 @@
     'labelPrefix' => null,
     'labelSrOnly' => null,
     'labelSuffix' => null,
+    'labelTag' => 'label',
     'required' => null,
     'statePath' => null,
 ])
@@ -49,11 +50,25 @@
     $hasError = filled($statePath) && ($errors->has($statePath) || ($hasNestedRecursiveValidationRules && $errors->has("{$statePath}.*")));
 @endphp
 
-<div data-field-wrapper {{ $attributes->class(['fi-fo-field-wrp']) }}>
+<div
+    data-field-wrapper
+    {{
+        $attributes
+            ->merge($field?->getExtraFieldWrapperAttributes() ?? [])
+            ->class(['fi-fo-field-wrp'])
+    }}
+>
     @if ($label && $labelSrOnly)
-        <label for="{{ $id }}" class="sr-only">
+        <{{ $labelTag }}
+            @if ($labelTag === 'label')
+                for="{{ $id }}"
+            @else
+                id="{{ $id }}-label"
+            @endif
+            class="sr-only"
+        >
             {{ $label }}
-        </label>
+        </{{ $labelTag }}>
     @endif
 
     <div
@@ -70,13 +85,17 @@
         @if (($label && (! $labelSrOnly)) || $labelPrefix || $labelSuffix || filled($hint) || $hintIcon || count($hintActions))
             <div
                 @class([
-                    'flex items-center justify-between gap-x-3',
+                    'flex items-center gap-x-3',
+                    'justify-between' => (! $labelSrOnly) || $labelPrefix || $labelSuffix,
+                    'justify-end' => $labelSrOnly && ! ($labelPrefix || $labelSuffix),
                     ($label instanceof \Illuminate\View\ComponentSlot) ? $label->attributes->get('class') : null,
                 ])
             >
                 @if ($label && (! $labelSrOnly))
                     <x-filament-forms::field-wrapper.label
-                        :for="$id"
+                        :for="($labelTag === 'label') ? $id : null"
+                        :id="($labelTag === 'label') ? null : ($id . '-label')"
+                        :tag="$labelTag"
                         :disabled="$isDisabled"
                         :prefix="$labelPrefix"
                         :required="$required"
@@ -106,7 +125,7 @@
         @if ((! \Filament\Support\is_slot_empty($slot)) || $hasError || filled($helperText))
             <div
                 @class([
-                    'grid gap-y-2',
+                    'grid auto-cols-fr gap-y-2',
                     'sm:col-span-2' => $hasInlineLabel,
                 ])
             >

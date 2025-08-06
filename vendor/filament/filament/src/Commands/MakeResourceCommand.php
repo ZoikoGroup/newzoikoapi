@@ -12,10 +12,12 @@ use Filament\Support\Commands\Concerns\CanReadModelSchemas;
 use Filament\Tables\Commands\Concerns\CanGenerateTables;
 use Illuminate\Console\Command;
 use Illuminate\Support\Arr;
+use Symfony\Component\Console\Attribute\AsCommand;
 
 use function Laravel\Prompts\select;
 use function Laravel\Prompts\text;
 
+#[AsCommand(name: 'make:filament-resource')]
 class MakeResourceCommand extends Command
 {
     use CanGenerateForms;
@@ -26,7 +28,7 @@ class MakeResourceCommand extends Command
 
     protected $description = 'Create a new Filament resource class and default page classes';
 
-    protected $signature = 'make:filament-resource {name?} {--model-namespace=} {--soft-deletes} {--view} {--G|generate} {--S|simple} {--panel=} {--F|force}';
+    protected $signature = 'make:filament-resource {name?} {--model-namespace=} {--soft-deletes} {--view} {--G|generate} {--S|simple} {--panel=} {--model} {--migration} {--factory} {--F|force}';
 
     public function handle(): int
     {
@@ -47,18 +49,43 @@ class MakeResourceCommand extends Command
             $model = 'Resource';
         }
 
+        $modelNamespace = $this->option('model-namespace') ?? 'App\\Models';
+
+        if ($this->option('model')) {
+            $this->callSilently('make:model', [
+                'name' => "{$modelNamespace}\\{$model}",
+            ]);
+        }
+
+        if ($this->option('migration')) {
+            $table = (string) str($model)
+                ->classBasename()
+                ->pluralStudly()
+                ->snake();
+
+            $this->call('make:migration', [
+                'name' => "create_{$table}_table",
+                '--create' => $table,
+            ]);
+        }
+
+        if ($this->option('factory')) {
+            $this->callSilently('make:factory', [
+                'name' => $model,
+            ]);
+        }
+
         $modelClass = (string) str($model)->afterLast('\\');
         $modelSubNamespace = str($model)->contains('\\') ?
             (string) str($model)->beforeLast('\\') :
             '';
-        $modelNamespace = $this->option('model-namespace') ?? 'App\\Models';
         $pluralModelClass = (string) str($modelClass)->pluralStudly();
         $needsAlias = $modelClass === 'Record';
 
         $panel = $this->option('panel');
 
         if ($panel) {
-            $panel = Filament::getPanel($panel);
+            $panel = Filament::getPanel($panel, isStrict: false);
         }
 
         if (! $panel) {
@@ -77,6 +104,13 @@ class MakeResourceCommand extends Command
 
         $resourceDirectories = $panel->getResourceDirectories();
         $resourceNamespaces = $panel->getResourceNamespaces();
+
+        foreach ($resourceDirectories as $resourceIndex => $resourceDirectory) {
+            if (str($resourceDirectory)->startsWith(base_path('vendor'))) {
+                unset($resourceDirectories[$resourceIndex]);
+                unset($resourceNamespaces[$resourceIndex]);
+            }
+        }
 
         $namespace = (count($resourceNamespaces) > 1) ?
             select(
@@ -205,8 +239,7 @@ class MakeResourceCommand extends Command
             'formSchema' => $this->indentString($this->option('generate') ? $this->getResourceFormSchema(
                 $modelNamespace . ($modelSubNamespace !== '' ? "\\{$modelSubNamespace}" : '') . '\\' . $modelClass,
             ) : '//', 4),
-            'model' => ($model === 'Resource') ? "{$modelNamespace}\\Resource as ResourceModel" : "{$modelNamespace}\\{$model}",
-            'modelClass' => ($model === 'Resource') ? 'ResourceModel' : $modelClass,
+            ...$this->generateModel($model, $modelNamespace, $modelClass),
             'namespace' => $namespace,
             'pages' => $this->indentString($pages, 3),
             'relations' => $this->indentString($relations, 1),
@@ -289,5 +322,24 @@ class MakeResourceCommand extends Command
         $this->components->info("Filament resource [{$resourcePath}] created successfully.");
 
         return static::SUCCESS;
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    protected function generateModel(string $model, string $modelNamespace, string $modelClass): array
+    {
+        $possibilities = ['Form', 'Table', 'Resource'];
+        $params = [];
+
+        if (in_array($model, $possibilities)) {
+            $params['model'] = "{$modelNamespace}\\{$model} as {$model}Model";
+            $params['modelClass'] = $model . 'Model';
+        } else {
+            $params['model'] = "{$modelNamespace}\\{$model}";
+            $params['modelClass'] = $modelClass;
+        }
+
+        return $params;
     }
 }

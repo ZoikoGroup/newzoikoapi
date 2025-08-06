@@ -23,9 +23,10 @@ return [
         //     'wsHost' => env('VITE_PUSHER_HOST'),
         //     'wsPort' => env('VITE_PUSHER_PORT'),
         //     'wssPort' => env('VITE_PUSHER_PORT'),
-        //     'authEndpoint' => '/api/v1/broadcasting/auth',
+        //     'authEndpoint' => '/broadcasting/auth',
         //     'disableStats' => true,
         //     'encrypted' => true,
+        //     'forceTLS' => true,
         // ],
 
     ],
@@ -84,5 +85,17 @@ return [
     */
 
     'livewire_loading_delay' => 'default',
+
+    /*
+    |--------------------------------------------------------------------------
+    | System Route Prefix
+    |--------------------------------------------------------------------------
+    |
+    | This is the prefix used for the system routes that Filament registers,
+    | such as the routes for downloading exports and failed import rows.
+    |
+    */
+
+    'system_route_prefix' => 'filament',
 
 ];

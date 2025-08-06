@@ -4,8 +4,8 @@ namespace Filament\Tables\Grouping;
 
 use BackedEnum;
 use Carbon\Carbon;
+use Carbon\CarbonInterface;
 use Closure;
-use DateTimeInterface;
 use Filament\Support\Components\Component;
 use Filament\Support\Contracts\HasLabel as LabelInterface;
 use Filament\Tables\Table;
@@ -17,6 +17,8 @@ use Illuminate\Support\Arr;
 
 class Group extends Component
 {
+    use Concerns\BelongsToTable;
+
     protected ?string $column;
 
     protected ?Closure $getDescriptionFromRecordUsing = null;
@@ -33,7 +35,7 @@ class Group extends Component
 
     protected ?Closure $scopeQueryByKeyUsing = null;
 
-    protected ?string $label;
+    protected string | Closure | null $label = null;
 
     protected string $id;
 
@@ -42,6 +44,8 @@ class Group extends Component
     protected bool $isTitlePrefixedWithLabel = true;
 
     protected bool $isDate = false;
+
+    protected string $evaluationIdentifier = 'group';
 
     final public function __construct(?string $id = null)
     {
@@ -84,7 +88,7 @@ class Group extends Component
         return $this;
     }
 
-    public function label(?string $label): static
+    public function label(string | Closure | null $label): static
     {
         $this->label = $label;
 
@@ -179,7 +183,7 @@ class Group extends Component
 
     public function getLabel(): string
     {
-        return $this->label ?? (string) str($this->getId())
+        return $this->evaluate($this->label) ?? (string) str($this->getId())
             ->beforeLast('.')
             ->afterLast('.')
             ->kebab()
@@ -215,11 +219,11 @@ class Group extends Component
         }
 
         if (filled($key) && $this->isDate()) {
-            if (! ($key instanceof DateTimeInterface)) {
+            if (! ($key instanceof CarbonInterface)) {
                 $key = Carbon::parse($key);
             }
 
-            $key = $key->format('Y-m-d');
+            $key = $key->toDateString();
         }
 
         return filled($key) ? strval($key) : null;
@@ -271,11 +275,11 @@ class Group extends Component
         }
 
         if (filled($title) && $this->isDate()) {
-            if (! ($title instanceof DateTimeInterface)) {
+            if (! ($title instanceof CarbonInterface)) {
                 $title = Carbon::parse($title);
             }
 
-            $title = $title->format(Table::$defaultDateDisplayFormat);
+            $title = $title->translatedFormat(Table::$defaultDateDisplayFormat);
         }
 
         return $title;
@@ -468,5 +472,17 @@ class Group extends Component
         }
 
         return $query->with([$relationshipName]);
+    }
+
+    /**
+     * @return array<mixed>
+     */
+    protected function resolveDefaultClosureDependencyForEvaluationByName(string $parameterName): array
+    {
+        return match ($parameterName) {
+            'livewire' => [$this->getLivewire()],
+            'table' => [$this->getTable()],
+            default => parent::resolveDefaultClosureDependencyForEvaluationByName($parameterName),
+        };
     }
 }
