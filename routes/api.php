@@ -56,7 +56,7 @@ Route::post('contact-us', [ContactController::class, 'contactusPost']);
 Route::post('/get/contact/entries', [ContactController::class, 'get_messages'])->middleware('auth:api');
 Route::delete('/delete/contact/entry/{id}', [ContactController::class, 'destroy'])->middleware('auth:api');
 
-Route::group(['namespace' => 'api', 'prefix' => 'v1'], function () {
+Route::middleware('auth:sanctum')->group(['namespace' => 'api', 'prefix' => 'v1'], function () {
     /*Need to disscuss with team about this*/
         // Route::post('test-api', [ApiController::class, 'api_test']);
         Route::post('login', [AuthenticationController::class, 'store']);
@@ -187,17 +187,12 @@ Route::group(['namespace' => 'api', 'prefix' => 'v1'], function () {
     Route::get('email-template/{id}', [EmailTemplateController::class, 'show'])->middleware('auth:api');
     Route::delete('email-template/delete/{id}', [EmailTemplateController::class, 'destroy'])->middleware('auth:api');
 
-    // //Plans
-    // Route::post('plans', [\App\Http\Controllers\PlansController::class, 'plans']);
-    // Route::post('plans/prepaid', [\App\Http\Controllers\PlansController::class, 'plan_prepaid']);
-    // Route::post('plans/postpaid', [\App\Http\Controllers\PlansController::class, 'plan_postpaid']);
-    // Route::post('plan/{id}', [\App\Http\Controllers\PlansController::class, 'plan_by_id']);  
-    Route::middleware('auth:sanctum')->get('/check-auth', function (Request $request) {
-        return response()->json([
-            'id' => $request->user()->id,
-            'email' => $request->user()->email
-        ]);
-    });
+    //Plans
+    Route::post('plans', [\App\Http\Controllers\PlansController::class, 'plans']);
+    Route::post('plans/prepaid', [\App\Http\Controllers\PlansController::class, 'plan_prepaid']);
+    Route::post('plans/postpaid', [\App\Http\Controllers\PlansController::class, 'plan_postpaid']);
+    Route::post('plan/{id}', [\App\Http\Controllers\PlansController::class, 'plan_by_id']);  
+    
 });
 
 
