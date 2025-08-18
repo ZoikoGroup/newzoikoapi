@@ -32,7 +32,8 @@ class AuthenticationController extends Controller
             }
 
             if ($user->status) {
-                $token = $user->createToken('appToken')->accessToken;
+                $token = $user->createToken('appToken')->plainTextToken;
+                // $token = $user->createToken('appToken')->accessToken;
 
                 return response()->json([
                     'success' => true,

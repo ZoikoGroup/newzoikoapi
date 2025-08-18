@@ -57,33 +57,35 @@ Route::post('/get/contact/entries', [ContactController::class, 'get_messages'])-
 Route::delete('/delete/contact/entry/{id}', [ContactController::class, 'destroy'])->middleware('auth:api');
 
 Route::group(['namespace' => 'api', 'prefix' => 'v1'], function () {
-    Route::post('test-api', [ApiController::class, 'api_test']);
-    Route::post('login', [AuthenticationController::class, 'store']);
-    Route::post('register', [AuthenticationController::class, 'register']);
-    Route::get('users', [AuthenticationController::class, 'get_all_users'])->middleware('auth:api');
-    Route::get('user/{id}', [AuthenticationController::class, 'show'])->middleware('auth:api');
-    Route::post('user/update/{id}', [AuthenticationController::class, 'update_user'])->middleware('auth:api');
-    Route::delete('user/delete/{id}', [AuthenticationController::class, 'delete_user'])->middleware('auth:api');
-    Route::post('logout', [AuthenticationController::class, 'destroy'])->middleware('auth:api');
+    /*Need to disscuss with team about this*/
+        // Route::post('test-api', [ApiController::class, 'api_test']);
+        Route::post('login', [AuthenticationController::class, 'store']);
+        Route::post('register', [AuthenticationController::class, 'register']);
+        Route::get('users', [AuthenticationController::class, 'get_all_users'])->middleware('auth:api');
+        Route::get('user/{id}', [AuthenticationController::class, 'show'])->middleware('auth:api');
+        Route::post('user/update/{id}', [AuthenticationController::class, 'update_user'])->middleware('auth:api');
+        Route::delete('user/delete/{id}', [AuthenticationController::class, 'delete_user'])->middleware('auth:api');
+        Route::post('logout', [AuthenticationController::class, 'destroy'])->middleware('auth:api');
 
-    Route::post('password/email', [ForgotPasswordController::class, '__invoke']);
-    Route::post('password/code/check', [CodeCheckController::class, '__invoke']);
-    Route::post('password/reset', [ResetPasswordController::class, '__invoke'])->middleware('auth:api');
-
+        Route::post('password/email', [ForgotPasswordController::class, '__invoke']);
+        Route::post('password/code/check', [CodeCheckController::class, '__invoke']);
+        Route::post('password/reset', [ResetPasswordController::class, '__invoke'])->middleware('auth:api');
+    /*END Need to disscuss with team about this*/
+        
     // User Address
     Route::post('address/create', [UserAddressController::class, 'store'])->middleware('auth:api');
     Route::post('address/update/{id}', [UserAddressController::class, 'update'])->middleware('auth:api');
     Route::get('addresses/user/{id}', [UserAddressController::class, 'show'])->middleware('auth:api');
     Route::delete('address/delete/{id}', [UserAddressController::class, 'destroy'])->middleware('auth:api');
 
-    //Product Routes
+    // Product Routes
     Route::get('products', [ProductController::class, 'index']);
     Route::get('product/get/{id}', [ProductController::class, 'show']);
     Route::post('product/create', [ProductController::class, 'store'])->middleware('auth:api');
     Route::post('product/update/{id}', [ProductController::class, 'update'])->middleware('auth:api');
     Route::delete('product/delete/{id}', [ProductController::class, 'destroy'])->middleware('auth:api');
 
-    //Product Category routes
+    // Product Category routes
     Route::get('product/categories/', [ProductCategoryController::class, 'index']);
     Route::get('product/category/{id}', [ProductCategoryController::class, 'show']);
     Route::post('product/category/create', [ProductCategoryController::class, 'store'])->middleware('auth:api');
@@ -175,7 +177,6 @@ Route::group(['namespace' => 'api', 'prefix' => 'v1'], function () {
 
     Route::post('orders/from-cart', [OrderController::class, 'createOrderFromCart'])->middleware('auth:api');
 
-
     // Order items
     Route::post('order/item/create', [OrderItemController::class, 'store'])->middleware('auth:api');
 
@@ -186,11 +187,27 @@ Route::group(['namespace' => 'api', 'prefix' => 'v1'], function () {
     Route::get('email-template/{id}', [EmailTemplateController::class, 'show'])->middleware('auth:api');
     Route::delete('email-template/delete/{id}', [EmailTemplateController::class, 'destroy'])->middleware('auth:api');
 
+    // //Plans
+    // Route::post('plans', [\App\Http\Controllers\PlansController::class, 'plans']);
+    // Route::post('plans/prepaid', [\App\Http\Controllers\PlansController::class, 'plan_prepaid']);
+    // Route::post('plans/postpaid', [\App\Http\Controllers\PlansController::class, 'plan_postpaid']);
+    // Route::post('plan/{id}', [\App\Http\Controllers\PlansController::class, 'plan_by_id']);  
+    Route::middleware('auth:sanctum')->get('/check-auth', function (Request $request) {
+        return response()->json([
+            'id' => $request->user()->id,
+            'email' => $request->user()->email
+        ]);
+    });
+});
+
+
+
+Route::middleware('auth:sanctum')->prefix('eoglobal')->group(function (){
     //Plans
     Route::post('plans', [\App\Http\Controllers\PlansController::class, 'plans']);
     Route::post('plans/prepaid', [\App\Http\Controllers\PlansController::class, 'plan_prepaid']);
     Route::post('plans/postpaid', [\App\Http\Controllers\PlansController::class, 'plan_postpaid']);
-    Route::post('plan/{id}', [\App\Http\Controllers\PlansController::class, 'plan_by_id']);  
+    Route::post('plan/{id}', [\App\Http\Controllers\PlansController::class, 'plan_by_id']); 
 });
 
 

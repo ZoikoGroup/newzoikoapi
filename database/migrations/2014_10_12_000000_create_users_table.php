@@ -17,7 +17,7 @@ return new class extends Migration {
             $table->timestamp('email_verified_at')->nullable();
             $table->foreignId('role_id')->default(2);
             $table->string('password');
-            //$table->integer('status');
+            $table->integer('status');
             $table->tinyInteger('status')->default(1);
             $table->rememberToken();
             $table->timestamps();
